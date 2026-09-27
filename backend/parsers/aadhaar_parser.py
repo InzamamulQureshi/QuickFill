@@ -12,7 +12,8 @@ from typing import Dict, Any, List, Optional, Tuple
 from .common import (
     INDIAN_STATES, PINCODE_REGEX, AADHAAR_REGEX, MASKED_AADHAAR_REGEX,
     clean_line, is_header_noise, is_instruction_noise, is_valid_person_name,
-    format_aadhaar_number, extract_aadhaar_number, extract_virtual_id
+    format_aadhaar_number, extract_aadhaar_number, extract_virtual_id,
+    FORBIDDEN_NAME_WORDS
 )
 from .date_util import calculate_age, normalize_date_string
 
@@ -65,7 +66,22 @@ class AadhaarParser:
         """
         cleaned_lines = [clean_line(l) for l in lines if clean_line(l)]
 
-        # Strategy 1: Real DOB line (must contain an actual date or 4-digit year, NOT disclaimer)
+        # Strategy 1: Look for line immediately after To/Po in e-Aadhaar letter section (highest precision)
+        for idx, line in enumerate(cleaned_lines):
+            if re.match(r"^(?:To|Po|Io|T0)[\s:.]*$", line.strip(), re.IGNORECASE):
+                for offset in range(1, 4):
+                    if idx + offset < len(cleaned_lines):
+                        cand = cleaned_lines[idx + offset]
+                        if is_instruction_noise(cand) or is_header_noise(cand):
+                            continue
+                        cand_clean = re.sub(r"^[\d\s.,|:;~*\"'#/-]+", "", cand).strip()
+                        cand_name = re.split(r"\b(?:Address|पता|D/O|S/O|W/O|C/O)\b|[\"|~]", cand_clean)[0].strip()
+                        if is_valid_person_name(cand_name):
+                            words = [w for w in re.findall(r"[A-Za-z]+", cand_name) if len(w) > 1 and w.upper() not in FORBIDDEN_NAME_WORDS]
+                            if len(words) >= 2:
+                                return " ".join(words).title(), 0.96
+
+        # Strategy 2: Real DOB line (must contain an actual date or 4-digit year, NOT disclaimer)
         dob_line_idx = -1
         for idx, line in enumerate(cleaned_lines):
             if is_instruction_noise(line):
@@ -85,30 +101,18 @@ class AadhaarParser:
                 cand_clean = re.sub(r"^[\d\s.,|:;~*\"'#/-]+", "", line).strip()
                 cand_clean = re.split(r"\b(?:Address|पता|D/O|S/O|W/O|C/O)\b|[\"|~]", cand_clean)[0].strip()
                 if is_valid_person_name(cand_clean):
-                    words = [w for w in re.findall(r"[A-Za-z]+", cand_clean) if len(w) > 1]
-                    return " ".join(words).title(), 0.94
-
-        # Strategy 2: Look for line after To/Po in letter section
-        for idx, line in enumerate(cleaned_lines):
-            if re.match(r"^(?:To|Po|Io|T0)[\s:.]*$", line.strip(), re.IGNORECASE):
-                for offset in range(1, 4):
-                    if idx + offset < len(cleaned_lines):
-                        cand = cleaned_lines[idx + offset]
-                        if is_instruction_noise(cand) or is_header_noise(cand):
-                            continue
-                        cand_clean = re.sub(r"^[\d\s.,|:;~*\"'#/-]+", "", cand).strip()
-                        cand_name = re.split(r"\b(?:Address|पता|D/O|S/O|W/O|C/O)\b|[\"|~]", cand_clean)[0].strip()
-                        if is_valid_person_name(cand_name):
-                            words = [w for w in re.findall(r"[A-Za-z]+", cand_name) if len(w) > 1]
-                            return " ".join(words).title(), 0.95
+                    words = [w for w in re.findall(r"[A-Za-z]+", cand_clean) if len(w) > 1 and w.upper() not in FORBIDDEN_NAME_WORDS]
+                    if len(words) >= 2:
+                        return " ".join(words).title(), 0.94
 
         # Strategy 3: Explicit Name: label
         name_label_match = re.search(r"(?:Name|Resident\s*Name)[\s:]*([A-Za-z\s.]{3,40})", raw_text, re.IGNORECASE)
         if name_label_match:
             candidate = name_label_match.group(1).strip()
             if is_valid_person_name(candidate):
-                words = [w for w in re.findall(r"[A-Za-z]+", candidate) if len(w) > 1]
-                return " ".join(words).title(), 0.93
+                words = [w for w in re.findall(r"[A-Za-z]+", candidate) if len(w) > 1 and w.upper() not in FORBIDDEN_NAME_WORDS]
+                if len(words) >= 2:
+                    return " ".join(words).title(), 0.93
 
         # Strategy 4: Fallback search in upper lines
         for line in cleaned_lines[:25]:
@@ -117,7 +121,7 @@ class AadhaarParser:
             cand_clean = re.sub(r"^[\d\s.,|:;~*\"'#/-]+", "", line).strip()
             cand_clean = re.split(r"\b(?:Address|पता|D/O|S/O|W/O|C/O)\b|[\"|~]", cand_clean)[0].strip()
             if is_valid_person_name(cand_clean):
-                words = [w for w in re.findall(r"[A-Za-z]+", cand_clean) if len(w) > 1]
+                words = [w for w in re.findall(r"[A-Za-z]+", cand_clean) if len(w) > 1 and w.upper() not in FORBIDDEN_NAME_WORDS]
                 if len(words) >= 2:
                     return " ".join(words).title(), 0.85
 
@@ -190,7 +194,17 @@ class AadhaarParser:
 
         # If line contains Gender on left and Address on right
         if re.search(r"\b(?:Female|Male|Transgender)\b", clean_l, re.IGNORECASE):
-            clean_l = re.sub(r"^.*?\b(?:Female|Male|Transgender)(?:/[A-Za-z]+)?\b(?:\s+(?:Female|Male|Transgender))?[^A-Za-z0-9]*\+?\d*\]?\s*", "", clean_l, flags=re.IGNORECASE)
+            clean_l = re.sub(
+                r"^.*?\b(?:Female|Male|Transgender)(?:\s*/\s*[A-Za-z]+)?\b\s*[=\s:]*",
+                "", clean_l, flags=re.IGNORECASE
+            )
+
+        # Strip leading stray single chars, numbers, and symbols: e.g. 'd $ ', '8 3 ', '3 '
+        clean_l = re.sub(r"^(?:[a-zA-Z0-9]\s*[$|•*~=+\-#]+\s*)+", "", clean_l)
+        clean_l = re.sub(r"^(?:\d\s+)+(?=[A-Za-z])", "", clean_l)
+
+        # Normalize OCR misreads of slashes in flat/building numbers (e.g. A}14 -> A/14)
+        clean_l = re.sub(r"([A-Za-z0-9])[\}\{]([A-Za-z0-9])", r"\1/\2", clean_l)
 
         # Strip leading / trailing OCR artifacts (do not strip trailing digits so pincodes and house numbers are preserved)
         clean_l = re.sub(r"^[^\w]+|[^\w)]+$", "", clean_l).strip()
@@ -218,6 +232,13 @@ class AadhaarParser:
 
         # 3. Address Lines
         cleaned_lines = [clean_line(l) for l in lines if clean_line(l)]
+
+        # Check if document has an explicit Address: / पता: label
+        has_explicit_address_label = any(
+            re.search(r"\b(?:Address|पता)\b[\s:]*", l, re.IGNORECASE)
+            for l in cleaned_lines if not is_instruction_noise(l)
+        )
+
         address_parts = []
         capturing = False
 
@@ -231,8 +252,8 @@ class AadhaarParser:
 
             # Look for explicit Address:
             addr_match = re.search(r"(?:^|[:\s|])(?:Address|पता)[\s:]*", line, re.IGNORECASE)
-            co_strict = re.search(r"(?:^|[:\s|])(?:C/O|S/O|D/O|W/O|H/O)[\s:.)-]+[A-Za-z]+", line, re.IGNORECASE)
-            ocr_co = re.search(r"(?:\"?1/[80o]\s*[JjDdCcSs][Oo][\s:.-]+[A-Za-z]+)", line, re.IGNORECASE)
+            co_strict = None if has_explicit_address_label else re.search(r"(?:^|[:\s|])(?:C/O|S/O|D/O|W/O|H/O)[\s:.)-]+[A-Za-z]+", line, re.IGNORECASE)
+            ocr_co = None if has_explicit_address_label else re.search(r"(?:\"?1/[80o]\s*[JjDdCcSs][Oo][\s:.-]+[A-Za-z]+)", line, re.IGNORECASE)
 
             if not capturing and (addr_match or co_strict or ocr_co):
                 clean_l = line
