@@ -2,9 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Quick Fill | Minimal ID Form Auto-Filler</title>
-  <meta name="description" content="Minimal, offline KYC form auto-filler for Aadhaar and PAN cards.">
+  <meta name="description" content="Fast, offline-first KYC form auto-filler for Aadhaar and PAN cards with intelligent OCR and multi-card data merging.">
+  
+  <!-- Favicon & Icons -->
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="alternate icon" type="image/png" href="/static/og-image.png">
+  <link rel="apple-touch-icon" href="/static/og-image.png">
+
+  <!-- Open Graph / Facebook / LinkedIn / WhatsApp -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Quick Fill — Minimal ID Form Auto-Filler">
+  <meta property="og:description" content="Instant KYC form auto-filler for Aadhaar & PAN cards with offline OCR and smart data merging.">
+  <meta property="og:image" content="/static/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Quick Fill — Minimal ID Form Auto-Filler">
+  <meta name="twitter:description" content="Instant KYC form auto-filler for Aadhaar & PAN cards with offline OCR and smart data merging.">
+  <meta name="twitter:image" content="/static/og-image.png">
+  <meta name="theme-color" content="#c86249">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -15,7 +36,7 @@
   <header class="navbar">
     <div class="navbar-container">
       <div class="brand">
-        <div class="brand-logo">QF</div>
+        <div class="brand-logo" title="Quick Fill">QF</div>
         <div class="brand-details">
           <span class="brand-title">Quick Fill</span>
           <span class="brand-subtitle">ID Auto-Fill</span>
@@ -83,9 +104,18 @@
               <polyline points="17 8 12 3 7 8"></polyline>
               <line x1="12" y1="3" x2="12" y2="15"></line>
             </svg>
-            <p class="dropzone-primary">Drop ID card image here</p>
-            <p class="dropzone-secondary">PNG, JPG, or WEBP</p>
-            <button type="button" class="btn btn-secondary btn-sm" id="browseFileBtn">Browse File</button>
+            <p class="dropzone-primary">Drop ID card image or paste</p>
+            <p class="dropzone-secondary">PNG, JPG, or WEBP • Ctrl+V to paste</p>
+            <div class="dropzone-actions">
+              <button type="button" class="btn btn-secondary btn-sm" id="browseFileBtn">Browse File</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="pasteClipboardBtn" title="Paste image from clipboard">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                </svg>
+                Paste Image
+              </button>
+            </div>
           </div>
         </div>
       </div>

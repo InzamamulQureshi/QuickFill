@@ -9,6 +9,10 @@
       "dest": "/frontend/$1"
     },
     {
+      "src": "/(favicon\\..*|og-image\\.png|logo\\.svg)",
+      "dest": "/frontend/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/frontend/index.html"
     }

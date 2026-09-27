@@ -160,3 +160,25 @@ if os.path.exists(frontend_dir):
     @app.get("/")
     async def serve_index():
         return FileResponse(os.path.join(frontend_dir, "index.html"))
+
+    @app.get("/favicon.ico")
+    @app.get("/favicon.svg")
+    async def serve_favicon():
+        fav_path = os.path.join(frontend_dir, "favicon.svg")
+        if os.path.exists(fav_path):
+            return FileResponse(fav_path, media_type="image/svg+xml")
+        return Response(status_code=404)
+
+    @app.get("/logo.svg")
+    async def serve_logo():
+        logo_path = os.path.join(frontend_dir, "logo.svg")
+        if os.path.exists(logo_path):
+            return FileResponse(logo_path, media_type="image/svg+xml")
+        return Response(status_code=404)
+
+    @app.get("/og-image.png")
+    async def serve_og_image():
+        og_path = os.path.join(frontend_dir, "og-image.png")
+        if os.path.exists(og_path):
+            return FileResponse(og_path, media_type="image/png")
+        return Response(status_code=404)

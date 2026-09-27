@@ -31,6 +31,7 @@
   --accent-contrast: #ffffff;
 
   /* Shared Tokens */
+  --page-px: clamp(14px, 3vw, 28px);
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
@@ -97,7 +98,8 @@ body {
   z-index: 50;
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border);
-  padding: clamp(10px, 1.8vw, 14px) clamp(16px, 3vw, 28px);
+  padding: clamp(10px, 1.8vw, 14px) var(--page-px);
+  width: 100%;
 }
 
 .navbar-container {
@@ -107,12 +109,13 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+  width: 100%;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
 }
 
@@ -209,22 +212,34 @@ body.light-theme .icon-moon { display: block; }
 .page-container {
   max-width: 1240px;
   margin: clamp(16px, 3vw, 32px) auto;
-  padding: 0 clamp(14px, 2.5vw, 24px);
+  padding: 0 var(--page-px);
   display: grid;
-  grid-template-columns: minmax(380px, 460px) 1fr;
+  grid-template-columns: minmax(360px, 460px) 1fr;
   gap: clamp(16px, 2.5vw, 28px);
   align-items: start;
+  width: 100%;
 }
 
 /* Tablet Layout (<= 1000px) */
 @media (max-width: 1000px) {
+  :root {
+    --page-px: clamp(12px, 3vw, 20px);
+  }
   .page-container {
     grid-template-columns: 1fr;
+    margin: 16px auto;
   }
 }
 
 /* Mobile Layout (<= 640px) */
 @media (max-width: 640px) {
+  :root {
+    --page-px: 12px;
+  }
+  .page-container {
+    margin: 12px auto;
+    gap: 14px;
+  }
   .engine-badge {
     display: none; /* Hide long badge on small screens */
   }
@@ -239,6 +254,8 @@ body.light-theme .icon-moon { display: block; }
   border-radius: var(--radius-lg);
   padding: clamp(16px, 2.5vw, 24px);
   box-shadow: var(--shadow-sm);
+  min-width: 0;
+  width: 100%;
 }
 
 .panel-header {
@@ -353,7 +370,16 @@ body.light-theme .icon-moon { display: block; }
 .dropzone-secondary {
   font-size: 12px;
   color: var(--text-muted);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+}
+
+.dropzone-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
 }
 
 /* --------------------------------------------------------------------------
@@ -552,14 +578,17 @@ body.light-theme .icon-moon { display: block; }
 .field-meta {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 6px;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
 }
 
 label {
   font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
+  line-height: 1.3;
 }
 
 .field-origin {
@@ -580,14 +609,17 @@ label {
 }
 
 /* Collapse two-column form inputs to single column on mobile */
-@media (max-width: 580px) {
+@media (max-width: 640px) {
   .field-row {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 }
 
 input[type="text"], textarea {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   font-family: inherit;
   font-size: 14px;
   color: var(--text-primary);
@@ -616,6 +648,8 @@ input::placeholder, textarea::placeholder {
 textarea {
   resize: vertical;
   min-height: 76px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .address-tags {
@@ -700,13 +734,15 @@ textarea {
   flex-wrap: wrap;
 }
 
-@media (max-width: 580px) {
+@media (max-width: 640px) {
   .form-actions {
     flex-direction: column;
     align-items: stretch;
+    gap: 8px;
   }
   .form-actions .btn {
     width: 100%;
+    justify-content: center;
   }
 }
 
@@ -846,4 +882,171 @@ textarea {
 
 .feature-item strong {
   color: var(--text-primary);
+}
+
+/* --------------------------------------------------------------------------
+   14. Small-Screen & Mobile Optimizations (<= 640px, <= 480px, <= 380px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .panel {
+    padding: 16px 14px;
+    border-radius: var(--radius-md);
+  }
+
+  .panel-header {
+    margin-bottom: 14px;
+  }
+
+  .panel-heading {
+    font-size: 15px;
+  }
+
+  .clean-form {
+    gap: 13px;
+  }
+
+  input[type="text"], textarea {
+    padding: 10px 12px;
+    font-size: 13.5px;
+  }
+
+  .demo-samples {
+    margin-top: 14px;
+    padding-top: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --page-px: 10px;
+  }
+
+  .page-container {
+    margin: 10px auto;
+    gap: 12px;
+  }
+
+  .panel {
+    padding: 14px 12px;
+    border-radius: var(--radius-md);
+  }
+
+  .segmented-control {
+    margin-bottom: 12px;
+  }
+
+  .seg-btn {
+    font-size: 12.5px;
+    padding: 7px 8px;
+    min-height: 38px;
+  }
+
+  .dropzone {
+    padding: 24px 12px;
+  }
+
+  .dropzone-primary {
+    font-size: 13.5px;
+  }
+
+  .dropzone-secondary {
+    font-size: 11.5px;
+  }
+
+  .dropzone-actions {
+    gap: 6px;
+  }
+
+  .dropzone-actions .btn {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 380px) {
+  :root {
+    --page-px: 8px;
+  }
+
+  .navbar {
+    padding: 8px var(--page-px);
+  }
+
+  .navbar-container {
+    gap: 8px;
+  }
+
+  .brand {
+    gap: 8px;
+  }
+
+  .brand-logo {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+
+  .brand-title {
+    font-size: 14px;
+  }
+
+  .btn-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .page-container {
+    margin: 8px auto;
+    gap: 10px;
+  }
+
+  .panel {
+    padding: 12px 10px;
+    border-radius: var(--radius-sm);
+  }
+
+  .field-group {
+    gap: 4px;
+  }
+
+  .field-meta {
+    gap: 4px;
+  }
+
+  .field-meta label {
+    font-size: 12.5px;
+  }
+
+  .field-origin {
+    font-size: 10px;
+  }
+
+  input[type="text"], textarea {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .dropzone {
+    padding: 18px 8px;
+  }
+
+  .dropzone-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .dropzone-actions .btn {
+    width: 100%;
+  }
+
+  .sample-pill {
+    padding: 5px 9px;
+    font-size: 11px;
+  }
+
+  .toast {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    padding: 10px 14px;
+  }
 }

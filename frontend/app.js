@@ -37,6 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const dropzone = document.getElementById("dropzone");
   const fileInput = document.getElementById("fileInput");
   const browseFileBtn = document.getElementById("browseFileBtn");
+  const pasteClipboardBtn = document.getElementById("pasteClipboardBtn");
 
   // Camera Elements
   const webcamVideo = document.getElementById("webcamVideo");
@@ -212,12 +213,93 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* --------------------------------------------------------------------------
-     4. File Upload & Drag-and-Drop
+     4. File Upload & Drag-and-Drop & Clipboard Paste
      -------------------------------------------------------------------------- */
-  browseFileBtn.addEventListener("click", () => fileInput.click());
-  dropzone.addEventListener("click", (e) => {
-    if (e.target !== browseFileBtn) fileInput.click();
+  browseFileBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    fileInput.click();
   });
+
+  if (pasteClipboardBtn) {
+    pasteClipboardBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await handleClipboardPaste();
+    });
+  }
+
+  dropzone.addEventListener("click", (e) => {
+    if (e.target !== browseFileBtn && !e.target.closest("#pasteClipboardBtn")) {
+      fileInput.click();
+    }
+  });
+
+  // Global window paste listener (Ctrl+V anywhere on page)
+  window.addEventListener("paste", async (e) => {
+    const isTextInput = document.activeElement && (
+      (document.activeElement.tagName === "INPUT" && document.activeElement.type === "text") ||
+      document.activeElement.tagName === "TEXTAREA"
+    );
+
+    const items = e.clipboardData ? e.clipboardData.items : null;
+    if (!items || items.length === 0) return;
+
+    let imageItem = null;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type && items[i].type.startsWith("image/")) {
+        imageItem = items[i];
+        break;
+      }
+    }
+
+    if (imageItem) {
+      e.preventDefault();
+      const file = imageItem.getAsFile();
+      if (file) {
+        showToast("Pasted from Clipboard", "Processing document image...");
+        handleFile(file);
+      }
+    }
+  });
+
+  async function handleClipboardPaste() {
+    if (!navigator.clipboard) {
+      showToast("Clipboard Unavailable", "Please press Ctrl+V to paste your image directly.");
+      return;
+    }
+
+    try {
+      if (typeof navigator.clipboard.read === "function") {
+        const items = await navigator.clipboard.read();
+        let foundImage = false;
+
+        for (const item of items) {
+          const imageType = item.types.find(t => t.startsWith("image/"));
+          if (imageType) {
+            const blob = await item.getType(imageType);
+            const ext = imageType.split("/")[1] || "png";
+            const file = new File([blob], `pasted_id_${Date.now()}.${ext}`, { type: imageType });
+            showToast("Pasted from Clipboard", "Processing document image...");
+            handleFile(file);
+            foundImage = true;
+            break;
+          }
+        }
+
+        if (!foundImage) {
+          showToast("No Image Found", "Clipboard does not contain an image. Copy a card photo or screenshot first.");
+        }
+      } else {
+        showToast("Use Shortcut", "Press Ctrl+V to paste the image directly from your clipboard.");
+      }
+    } catch (err) {
+      console.warn("Clipboard read error:", err);
+      if (err.name === "NotAllowedError" || err.name === "SecurityError") {
+        showToast("Clipboard Permission", "Press Ctrl+V to paste directly into the page.");
+      } else {
+        showToast("Paste Image", "Press Ctrl+V on your keyboard to paste the copied image.");
+      }
+    }
+  }
 
   fileInput.addEventListener("change", (e) => {
     const file = e.target.files[0];
