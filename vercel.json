@@ -4,6 +4,10 @@
   "cleanUrls": true,
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "https://inzamamulqureshi-quickfill-ubyhsl-144127-72-60-220-75.sslip.io/api/$1"
+    },
+    {
       "src": "/static/(.*)",
       "dest": "/frontend/$1"
     },
