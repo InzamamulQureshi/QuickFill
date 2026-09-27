@@ -884,6 +884,114 @@ textarea {
   color: var(--text-primary);
 }
 
+/* Password Modal Specifics */
+.modal-password {
+  max-width: 480px;
+}
+
+.modal-title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-lock-icon {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.password-warning-banner {
+  background-color: var(--accent-subtle);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+}
+
+.password-warning-banner p {
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.password-hint-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background-color: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 16px;
+}
+
+.password-hint-box .hint-icon {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.password-hint-box .hint-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.password-hint-box .hint-text strong {
+  color: var(--text-primary);
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.password-input-wrapper input {
+  padding-right: 44px !important;
+  font-family: monospace;
+  font-size: 15px;
+  letter-spacing: 1.5px;
+}
+
+.btn-toggle-eye {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+}
+
+.btn-toggle-eye:hover {
+  color: var(--text-primary);
+}
+
+.error-msg {
+  color: #e5534b;
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.modal-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
 /* --------------------------------------------------------------------------
    14. Small-Screen & Mobile Optimizations (<= 640px, <= 480px, <= 380px)
    -------------------------------------------------------------------------- */

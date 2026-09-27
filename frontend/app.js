@@ -86,6 +86,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeModalBtn = document.getElementById("closeModalBtn");
   const engineLabel = document.getElementById("engineLabel");
 
+  // PDF Password Modal Elements
+  const pdfPasswordModal = document.getElementById("pdfPasswordModal");
+  const closePdfPasswordModalBtn = document.getElementById("closePdfPasswordModalBtn");
+  const cancelPdfPasswordBtn = document.getElementById("cancelPdfPasswordBtn");
+  const pdfPasswordForm = document.getElementById("pdfPasswordForm");
+  const pdfPasswordInput = document.getElementById("pdfPasswordInput");
+  const unlockPdfSubmitBtn = document.getElementById("unlockPdfSubmitBtn");
+  const togglePasswordVisibilityBtn = document.getElementById("togglePasswordVisibilityBtn");
+  const eyeShowIcon = document.getElementById("eyeShowIcon");
+  const eyeHideIcon = document.getElementById("eyeHideIcon");
+  const pdfPasswordError = document.getElementById("pdfPasswordError");
+  let pendingPdfFile = null;
+
   // Sample card buttons
   const samplePills = document.querySelectorAll(".sample-pill");
 
@@ -333,11 +346,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (isPdf) {
+      pendingPdfFile = file;
       previewContainer.style.display = "block";
       detectedDocBadge.textContent = "Reading PDF...";
       previewImage.src = "";
       processImageExtraction(file, false);
     } else {
+      pendingPdfFile = null;
       const reader = new FileReader();
       reader.onload = (e) => {
         const dataUrl = e.target.result;
@@ -359,7 +374,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /* --------------------------------------------------------------------------
      5. OCR Extraction & Form Filling API Call
      -------------------------------------------------------------------------- */
-  async function processImageExtraction(imageSource, isBase64) {
+  async function processImageExtraction(imageSource, isBase64, password = "") {
     const formData = new FormData();
     if (isBase64) {
       formData.append("image_data", imageSource);
@@ -368,6 +383,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     formData.append("doc_hint", "auto");
     formData.append("engine", "auto");
+    if (password) {
+      formData.append("password", password);
+    }
 
     try {
       const res = await fetch(api("/api/extract"), {
@@ -378,14 +396,24 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await res.json();
 
       if (res.ok && result.success) {
+        closePasswordModal();
         handleExtractionSuccess(result);
       } else {
+        if (result.needs_password || (res.status === 400 && (result.error === "Password Protected PDF" || result.needs_password))) {
+          openPasswordModal(password ? "Incorrect password. Please verify and try again." : "");
+          return;
+        }
         detectedDocBadge.textContent = "Extraction Error";
         showToast(result.error || "Extraction Failed", result.message || result.error || "Could not read ID document.");
       }
     } catch (err) {
       console.error("API error:", err);
       showToast("Network Error", "Could not reach backend extraction service.");
+    } finally {
+      if (unlockPdfSubmitBtn) {
+        unlockPdfSubmitBtn.disabled = false;
+        unlockPdfSubmitBtn.textContent = "Unlock & Extract";
+      }
     }
   }
 
@@ -647,9 +675,88 @@ document.addEventListener("DOMContentLoaded", () => {
 
   infoBtn.addEventListener("click", () => infoModal.style.display = "flex");
   closeModalBtn.addEventListener("click", () => infoModal.style.display = "none");
-  infoModal.addEventListener("click", (e) => {
-    if (e.target === infoModal) infoModal.style.display = "none";
-  });
+  /* --------------------------------------------------------------------------
+     10. PDF Password Modal Controls
+     -------------------------------------------------------------------------- */
+  function openPasswordModal(errorMessage = "") {
+    if (!pdfPasswordModal) return;
+    pdfPasswordModal.style.display = "flex";
+    if (errorMessage) {
+      pdfPasswordError.textContent = errorMessage;
+      pdfPasswordError.style.display = "block";
+    } else {
+      pdfPasswordError.textContent = "";
+      pdfPasswordError.style.display = "none";
+    }
+    pdfPasswordInput.value = "";
+    pdfPasswordInput.type = "password";
+    if (eyeShowIcon) eyeShowIcon.style.display = "block";
+    if (eyeHideIcon) eyeHideIcon.style.display = "none";
+    setTimeout(() => pdfPasswordInput.focus(), 100);
+  }
+
+  function closePasswordModal() {
+    if (!pdfPasswordModal) return;
+    pdfPasswordModal.style.display = "none";
+    pdfPasswordError.textContent = "";
+    pdfPasswordError.style.display = "none";
+    pdfPasswordInput.value = "";
+    if (unlockPdfSubmitBtn) {
+      unlockPdfSubmitBtn.disabled = false;
+      unlockPdfSubmitBtn.textContent = "Unlock & Extract";
+    }
+  }
+
+  if (closePdfPasswordModalBtn) {
+    closePdfPasswordModalBtn.addEventListener("click", closePasswordModal);
+  }
+  if (cancelPdfPasswordBtn) {
+    cancelPdfPasswordBtn.addEventListener("click", closePasswordModal);
+  }
+  if (pdfPasswordModal) {
+    pdfPasswordModal.addEventListener("click", (e) => {
+      if (e.target === pdfPasswordModal) closePasswordModal();
+    });
+  }
+
+  if (togglePasswordVisibilityBtn) {
+    togglePasswordVisibilityBtn.addEventListener("click", () => {
+      const isPwd = pdfPasswordInput.type === "password";
+      pdfPasswordInput.type = isPwd ? "text" : "password";
+      if (eyeShowIcon) eyeShowIcon.style.display = isPwd ? "none" : "block";
+      if (eyeHideIcon) eyeHideIcon.style.display = isPwd ? "block" : "none";
+      pdfPasswordInput.focus();
+    });
+  }
+
+  function submitPdfPassword() {
+    const pwd = pdfPasswordInput.value.trim();
+    if (!pwd) {
+      pdfPasswordError.textContent = "Please enter the PDF password.";
+      pdfPasswordError.style.display = "block";
+      pdfPasswordInput.focus();
+      return;
+    }
+    if (!pendingPdfFile) {
+      closePasswordModal();
+      showToast("No Document", "Please select or drop the PDF file again.");
+      return;
+    }
+    unlockPdfSubmitBtn.disabled = true;
+    unlockPdfSubmitBtn.textContent = "Unlocking...";
+    pdfPasswordError.style.display = "none";
+    processImageExtraction(pendingPdfFile, false, pwd);
+  }
+
+  if (unlockPdfSubmitBtn) {
+    unlockPdfSubmitBtn.addEventListener("click", submitPdfPassword);
+  }
+  if (pdfPasswordForm) {
+    pdfPasswordForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      submitPdfPassword();
+    });
+  }
 
   /* --------------------------------------------------------------------------
      10. Toast Notification

@@ -118,7 +118,14 @@ class OCREngineManager:
         if not TESSERACT_AVAILABLE:
             raise RuntimeError("Tesseract OCR is not installed or not in PATH.")
 
-        custom_config = r"--oem 3 --psm 6"
+        w, h = pil_img.size
+        # Full documents/pages with height > width require PSM 3 (automatic page segmentation)
+        # to prevent Tesseract from gluing multi-column text horizontally across lines.
+        if h / float(w) > 1.15:
+            custom_config = r"--oem 3 --psm 3"
+        else:
+            custom_config = r"--oem 3 --psm 6"
+
         raw_text = pytesseract.image_to_string(pil_img, config=custom_config, lang="eng")
         lines = [l.strip() for l in raw_text.splitlines() if l.strip()]
 

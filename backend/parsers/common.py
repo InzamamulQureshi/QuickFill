@@ -42,6 +42,32 @@ HEADER_NOISE_TERMS = [
     "SIGNATURE VALID", "ELECTRONICALLY GENERATED"
 ]
 
+# Words that should NEVER appear inside a candidate's personal name
+FORBIDDEN_NAME_WORDS = {
+    "DOWNLOAD", "DATE", "ISSUE", "PRINT", "ADDRESS", "AADHAAR", "UIDAI",
+    "GOVERNMENT", "INDIA", "BHARAT", "MALE", "FEMALE", "TRANSGENDER", "YEAR", "BIRTH",
+    "ENROLMENT", "VALID", "SIGNATURE", "HELP", "INFO", "INFORMATION",
+    "BUNGLOW", "BUNGALOW", "FLAT", "FLOOR", "ROAD", "MARG", "STREET",
+    "NAGAR", "HALL", "BUILDING", "BLDG", "HOUSE", "NEAR", "OPP", "VILLAGE",
+    "POST", "DIST", "DISTRICT", "STATE", "PIN", "PINCODE", "MOBILE", "VTC",
+    "SUB", "PO", "VID", "VIB", "VIRTUAL", "CARD", "AUTHORITY", "UNIQUE", "IDENTIFICATION",
+    "IDENTITY", "CITIZENSHIP", "PROOF", "BENEFIT", "BENEFITS", "SERVICE", "SERVICES",
+    "COMMUNICATION", "OFFLINE", "ONLINE", "AUTHENTICATION", "REPUBLIC", "DEPARTMENT",
+    "DOCUMENTS", "SUPPORT", "UPDATED", "ENTITIES", "SEEKING", "CONSENT"
+}
+
+# UIDAI e-Aadhaar informational boilerplate bullet points
+INSTRUCTION_TERMS = [
+    "DOCUMENTS TO SUPPORT", "SHOULD BE UPDATED", "AVAIL OF VARIOUS",
+    "GOVERNMENT BENEFITS", "KEEP YOUR MOBILE", "DOWNLOAD MAADHAAR",
+    "LOCK/UNLOCK", "ENTITIES SEEKING", "OBLIGATED TO SEEK",
+    "EITHER ONLINE", "AUTHENTICATION AGENCY", "QR SCANNER",
+    "UNIQUE AND SECURE", "INFORMATION", "सूचना", "YEARS FROM DATE",
+    "PROOF OF IDENTITY", "NOT OF CITIZENSHIP", "PROOF OF DOB",
+    "AADHAAR IS PROOF", "NOT FOR TRAVEL", "BAAL AADHAAR",
+    "BE USED WITH VERIFICATION", "SCANNING OF QR CODE", "HELP@UIDAI"
+]
+
 
 def clean_line(text: str) -> str:
     """Removes stray symbols and trims whitespace."""
@@ -53,8 +79,24 @@ def clean_line(text: str) -> str:
     return cleaned
 
 
+def is_instruction_noise(line: str) -> bool:
+    """Detects UIDAI informational boilerplate, instruction tables, and disclaimers."""
+    if not line:
+        return True
+    u = line.upper()
+    for term in INSTRUCTION_TERMS:
+        if term in u:
+            return True
+    return False
+
+
 def is_header_noise(line: str) -> bool:
-    """Checks if a line contains typical ID header noise or boilerplate."""
+    """Checks if a line contains typical ID header noise, instructions, or boilerplate."""
+    if not line:
+        return True
+    if is_instruction_noise(line):
+        return True
+
     line_upper = line.upper().strip()
     # Exactly matches noise words
     exact_noise = [
@@ -78,6 +120,31 @@ def is_header_noise(line: str) -> bool:
         if term in line_upper and len(line_upper) < len(term) + 12:
             return True
     return False
+
+
+def is_valid_person_name(cand: str) -> bool:
+    """Validates whether a candidate string is genuinely a person's name and not address/noise."""
+    if not cand or len(cand.strip()) < 3:
+        return False
+    # Person names on ID cards never contain multi-digit numbers (Aadhaar/VID/dates/phones)
+    if re.search(r"\d{2,}", cand):
+        return False
+    words = [w for w in re.findall(r"[A-Za-z]+", cand) if len(w) > 1]
+    if not words:
+        return False
+    # If any word is forbidden or line is noise
+    for w in words:
+        if w.upper() in FORBIDDEN_NAME_WORDS:
+            return False
+    if is_header_noise(cand) or is_instruction_noise(cand):
+        return False
+    # Person name should be 1 to 4 words
+    if not (1 <= len(words) <= 4):
+        return False
+    # If single word, must be at least 4 letters (e.g. 'Amit', not 'Wm' or 'Vib')
+    if len(words) == 1 and len(words[0]) < 4:
+        return False
+    return True
 
 
 def format_aadhaar_number(raw_num: str) -> str:

@@ -144,6 +144,7 @@ async def extract_from_upload(
                     status_code=400,
                     content={
                         "success": False,
+                        "needs_password": True,
                         "error": "Password Protected PDF",
                         "message": "This e-Aadhaar PDF is password-protected. UIDAI password format is: First 4 letters of your Name in CAPITAL letters followed by 4-digit Year of Birth (e.g. AARA1995)."
                     }
@@ -159,28 +160,32 @@ async def extract_from_upload(
             ocr_lines = []
             engine_used = "Digital PDF Parser"
 
-            # If rendered page image is available, run OCR to capture graphical/bilingual text
-            if rendered_images:
+            # Check if digital vector text is already rich (e.g. direct e-Aadhaar download from UIDAI)
+            has_rich_digital_text = (
+                len(digital_text.strip()) > 80 and
+                any(kw in digital_text.upper() for kw in ["AADHAAR", "DOB", "YEAR OF BIRTH", "GOVERNMENT", "INDIA", "MALE", "FEMALE"])
+            )
+
+            # Only run computer vision OCR if digital vector text is missing or sparse (scanned PDF)
+            if not has_rich_digital_text and rendered_images:
                 try:
                     buf = io.BytesIO()
                     rendered_images[0].save(buf, format="PNG")
                     page_ocr = await OCREngineManager.recognize(buf.getvalue(), engine=engine or "auto")
                     ocr_text = page_ocr.get("raw_text", "")
                     ocr_lines = page_ocr.get("lines", [])
-                    engine_used = f"{page_ocr.get('engine', 'OCR')} + Digital PDF"
+                    engine_used = f"{page_ocr.get('engine', 'OCR')} (Scanned PDF)"
                 except Exception as e:
                     print(f"[!] Warning during PDF page OCR: {e}")
 
-            # Merge digital and OCR lines
             all_lines = []
-            seen = set()
-            for l in digital_lines + ocr_lines:
+            source_lines = digital_lines if has_rich_digital_text else (ocr_lines + digital_lines)
+            for l in source_lines:
                 cleaned = l.strip()
-                if cleaned and cleaned not in seen:
+                if cleaned:
                     all_lines.append(cleaned)
-                    seen.add(cleaned)
 
-            combined_text = digital_text + "\n" + ocr_text if ocr_text else digital_text
+            combined_text = digital_text if has_rich_digital_text else (ocr_text or digital_text)
             if not combined_text.strip():
                 combined_text = "\n".join(all_lines)
 

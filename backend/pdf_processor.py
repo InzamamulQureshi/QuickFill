@@ -64,16 +64,17 @@ class PDFProcessor:
         if PYPDF_AVAILABLE:
             try:
                 reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
-                result["page_count"] = len(reader.pages)
                 if reader.is_encrypted:
                     result["is_encrypted"] = True
                     result["is_decrypted"] = False
 
                     # Try passwords (user-provided, uppercase, or blank)
-                    passwords_to_try = [""]
+                    passwords_to_try = []
                     if password:
-                        passwords_to_try.insert(0, password)
-                        passwords_to_try.insert(1, password.upper())
+                        passwords_to_try.append(password)
+                        if password.upper() != password:
+                            passwords_to_try.append(password.upper())
+                    passwords_to_try.append("")
 
                     for pwd in passwords_to_try:
                         try:
@@ -84,7 +85,8 @@ class PDFProcessor:
                         except Exception:
                             continue
 
-                if result["is_decrypted"]:
+                if not result["is_encrypted"] or result["is_decrypted"]:
+                    result["page_count"] = len(reader.pages)
                     extracted_chunks = []
                     for page in reader.pages:
                         try:
@@ -98,6 +100,10 @@ class PDFProcessor:
                         l.strip() for l in result["digital_text"].splitlines() if l.strip()
                     ]
             except Exception as e:
+                err_msg = str(e).lower()
+                if "decrypt" in err_msg or "password" in err_msg:
+                    result["is_encrypted"] = True
+                    result["is_decrypted"] = False
                 result["error"] = f"pypdf extraction error: {e}"
 
         # Step 2: High-resolution raster rendering using pypdfium2
