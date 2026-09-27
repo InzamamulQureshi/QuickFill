@@ -1,7 +1,4 @@
 {
-  "version": 2,
-  "public": true,
-  "cleanUrls": true,
   "routes": [
     {
       "src": "/api/(.*)",
