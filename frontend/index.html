@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Fill | Minimal ID Form Auto-Filler</title>
+  <meta name="description" content="Minimal, offline KYC form auto-filler for Aadhaar and PAN cards.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="dark-theme">
+  <!-- Minimal Top Navigation Bar -->
+  <header class="navbar">
+    <div class="navbar-container">
+      <div class="brand">
+        <div class="brand-logo">QF</div>
+        <div class="brand-details">
+          <span class="brand-title">Quick Fill</span>
+          <span class="brand-subtitle">ID Auto-Fill</span>
+        </div>
+        <div class="engine-badge" id="engineStatusIndicator" title="Active Engine">
+          <span class="status-dot"></span>
+          <span id="engineLabel">Local OCR</span>
+        </div>
+      </div>
+
+      <div class="navbar-actions">
+        <!-- Theme Switcher Button -->
+        <button type="button" class="btn-icon" id="themeToggleBtn" aria-label="Toggle theme" title="Toggle Light / Dark Theme">
+          <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2"></path>
+            <path d="M12 20v2"></path>
+            <path d="m4.93 4.93 1.41 1.41"></path>
+            <path d="m17.66 17.66 1.41 1.41"></path>
+            <path d="M2 12h2"></path>
+            <path d="M20 12h2"></path>
+            <path d="m6.34 17.66-1.41 1.41"></path>
+            <path d="m19.07 4.93-1.41 1.41"></path>
+          </svg>
+          <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+          </svg>
+        </button>
+
+        <!-- Information Modal Trigger -->
+        <button type="button" class="btn-icon" id="infoBtn" aria-label="Project Information" title="About Quick Fill">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="page-container">
+    
+    <!-- LEFT PANEL: Capture & Upload -->
+    <section class="panel studio-panel">
+      <div class="panel-header">
+        <h2 class="panel-heading">Document Source</h2>
+        <span class="subtle-tag">Aadhaar / PAN</span>
+      </div>
+
+      <!-- Segmented Tab Switcher -->
+      <div class="segmented-control">
+        <button type="button" class="seg-btn active" id="tabUploadBtn">Upload File</button>
+        <button type="button" class="seg-btn" id="tabCameraBtn">Camera Capture</button>
+      </div>
+
+      <!-- Upload View -->
+      <div class="studio-section" id="uploadView">
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="fileInput" accept="image/*,.pdf" style="display: none;">
+          <div class="dropzone-inner">
+            <svg class="upload-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <p class="dropzone-primary">Drop ID card image here</p>
+            <p class="dropzone-secondary">PNG, JPG, or WEBP</p>
+            <button type="button" class="btn btn-secondary btn-sm" id="browseFileBtn">Browse File</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Camera View -->
+      <div class="studio-section" id="cameraView" style="display: none;">
+        <div class="camera-wrapper">
+          <video id="webcamVideo" autoplay playsinline muted></video>
+          <div class="camera-frame-guide">
+            <span>Center card inside frame</span>
+          </div>
+        </div>
+        <div class="camera-actions">
+          <button type="button" class="btn btn-primary" id="shutterBtn">Capture & Scan</button>
+          <button type="button" class="btn btn-ghost" id="stopCameraBtn">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Document Preview -->
+      <div class="preview-box" id="previewContainer" style="display: none;">
+        <div class="preview-top">
+          <span class="preview-title">Document Preview</span>
+          <span class="badge" id="detectedDocBadge">Ready</span>
+        </div>
+        <div class="preview-media">
+          <img id="previewImage" alt="Document Preview" src="">
+          <div id="scannerLaser" style="display: none;"></div>
+        </div>
+        <div class="preview-footer">
+          <span id="ocrTimeMeta">Speed: --</span>
+          <span id="ocrLinesMeta">Lines: --</span>
+          <button type="button" class="btn-link" id="toggleRawTextBtn">View OCR Text</button>
+        </div>
+        <pre class="raw-text-view" id="rawTextInspector" style="display: none;"></pre>
+      </div>
+
+      <!-- Demo Cards Bar -->
+      <div class="demo-samples">
+        <span class="demo-label">Quick Test Cards:</span>
+        <div class="demo-buttons">
+          <button type="button" class="sample-pill" data-sample="aadhaar_front">Aadhaar Front</button>
+          <button type="button" class="sample-pill" data-sample="aadhaar_back">Aadhaar Back</button>
+          <button type="button" class="sample-pill" data-sample="pan">PAN Card</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: Form Auto-Filler -->
+    <section class="panel form-panel">
+      <div class="panel-header">
+        <h2 class="panel-heading">Applicant Form</h2>
+        <span class="status-pill" id="mergeStatusIndicator">Auto-Merge Ready</span>
+      </div>
+
+      <form id="quickFillForm" class="clean-form" autocomplete="off" onsubmit="return false;">
+        
+        <!-- Full Name -->
+        <div class="field-group" id="groupName">
+          <div class="field-meta">
+            <label for="fullName">Full Name</label>
+            <span class="field-origin" id="badgeName">Manual</span>
+          </div>
+          <input type="text" id="fullName" name="fullName" placeholder="e.g. Aarav Suresh Sharma" required>
+        </div>
+
+        <!-- DOB & Calculated Age -->
+        <div class="field-row">
+          <div class="field-group" id="groupDob">
+            <div class="field-meta">
+              <label for="dateOfBirth">Date of Birth</label>
+              <span class="field-origin" id="badgeDob">Manual</span>
+            </div>
+            <input type="text" id="dateOfBirth" name="dateOfBirth" placeholder="DD/MM/YYYY" required>
+          </div>
+
+          <div class="field-group" id="groupAge">
+            <div class="field-meta">
+              <label for="calculatedAge">Age</label>
+              <span class="field-origin">Computed</span>
+            </div>
+            <input type="text" id="calculatedAge" name="calculatedAge" placeholder="Calculated from DOB" readonly class="input-readonly">
+          </div>
+        </div>
+
+        <!-- Father / Spouse Name -->
+        <div class="field-group" id="groupFatherSpouse">
+          <div class="field-meta">
+            <label for="fatherSpouseName">Father / Spouse Name</label>
+            <span class="field-origin" id="badgeFatherSpouse">From ID</span>
+          </div>
+          <input type="text" id="fatherSpouseName" name="fatherSpouseName" placeholder="e.g. Suresh Ram Sharma">
+        </div>
+
+        <!-- Residential Address -->
+        <div class="field-group" id="groupAddress">
+          <div class="field-meta">
+            <label for="fullAddress">Residential Address</label>
+            <span class="field-origin" id="badgeAddress">From Aadhaar</span>
+          </div>
+          <textarea id="fullAddress" name="fullAddress" rows="3" placeholder="House/Flat No, Street, City, State, PIN Code"></textarea>
+          <div class="address-tags" id="addressChipsRow">
+            <span class="tag-meta" id="chipState" style="display: none;"></span>
+            <span class="tag-meta" id="chipPincode" style="display: none;"></span>
+          </div>
+        </div>
+
+        <!-- ID Number & Gender -->
+        <div class="field-row">
+          <div class="field-group">
+            <label for="idNumber">Document ID</label>
+            <input type="text" id="idNumber" name="idNumber" placeholder="Aadhaar / PAN Number">
+          </div>
+
+          <div class="field-group">
+            <label for="gender">Gender</label>
+            <input type="text" id="gender" name="gender" placeholder="Male / Female / Other">
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" id="submitFormBtn">Submit Application</button>
+          <button type="button" class="btn btn-secondary" id="exportJsonBtn">Export JSON</button>
+          <button type="button" class="btn btn-ghost" id="resetFormBtn">Reset</button>
+        </div>
+
+      </form>
+    </section>
+
+  </main>
+
+  <!-- Notification Toast -->
+  <div class="toast" id="toastNotification">
+    <div class="toast-indicator"></div>
+    <div class="toast-content">
+      <p class="toast-title" id="toastTitle">Success</p>
+      <p class="toast-desc" id="toastMessage">Fields filled.</p>
+    </div>
+  </div>
+
+  <!-- Info Modal -->
+  <div class="modal-overlay" id="infoModal" style="display: none;">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>About Quick Fill (QF)</h3>
+        <button type="button" class="btn-icon" id="closeModalBtn" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="modal-content">
+        <p class="modal-summary"><strong>Quick Fill</strong> is an intelligent identity document parsing and KYC auto-fill application. It processes Aadhaar and PAN cards 100% locally on your machine with zero cloud dependence.</p>
+        
+        <div class="modal-feature-list">
+          <div class="feature-item">
+            <strong>Engine:</strong> Windows Media Native OCR + OpenCV Enhancement
+          </div>
+          <div class="feature-item">
+            <strong>Supported Documents:</strong> Aadhaar Card (Front & Back), PAN Card
+          </div>
+          <div class="feature-item">
+            <strong>Smart Merging:</strong> Combines data across multiple card scans without overwriting
+          </div>
+          <div class="feature-item">
+            <strong>Privacy:</strong> Fully offline, zero data transmitted over external networks
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="snapshotCanvas" style="display: none;"></canvas>
+  <script src="/static/app.js"></script>
+</body>
+</html>
