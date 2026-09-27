@@ -326,22 +326,32 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function handleFile(file) {
-    if (!file.type.startsWith("image/") && !file.name.endsWith(".pdf")) {
-      showToast("Unsupported Format", "Please provide a valid image file (JPG, PNG, WEBP).");
+    const isPdf = file.name.toLowerCase().endsWith(".pdf") || file.type === "application/pdf";
+    if (!file.type.startsWith("image/") && !isPdf) {
+      showToast("Unsupported Format", "Please provide a valid image (JPG, PNG, WEBP) or e-Aadhaar PDF.");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target.result;
-      displayPreview(dataUrl);
+    if (isPdf) {
+      previewContainer.style.display = "block";
+      detectedDocBadge.textContent = "Reading PDF...";
+      previewImage.src = "";
       processImageExtraction(file, false);
-    };
-    reader.readAsDataURL(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        displayPreview(dataUrl);
+        processImageExtraction(file, false);
+      };
+      reader.readAsDataURL(file);
+    }
   }
 
   function displayPreview(src) {
-    previewImage.src = src;
+    if (src) {
+      previewImage.src = src;
+    }
     previewContainer.style.display = "block";
     detectedDocBadge.textContent = "Scanning...";
   }
@@ -371,7 +381,7 @@ document.addEventListener("DOMContentLoaded", () => {
         handleExtractionSuccess(result);
       } else {
         detectedDocBadge.textContent = "Extraction Error";
-        showToast("Extraction Failed", result.error || "Could not read ID document.");
+        showToast(result.error || "Extraction Failed", result.message || result.error || "Could not read ID document.");
       }
     } catch (err) {
       console.error("API error:", err);
@@ -386,6 +396,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const data = response.data;
     const meta = response.ocr_meta || {};
     const docType = response.detected_type || data.card_type || "Detected ID";
+
+    if (response.preview_image) {
+      previewImage.src = response.preview_image;
+      previewContainer.style.display = "block";
+    }
 
     detectedDocBadge.textContent = docType;
     ocrTimeMeta.textContent = `Speed: ${meta.processing_time_ms || 0} ms`;
@@ -457,8 +472,11 @@ document.addEventListener("DOMContentLoaded", () => {
       inputGender.classList.add("field-populated");
     }
 
-    // Smart Merge indicator
-    if (formState.documentsScanned.length > 1) {
+    // Smart Merge & e-Aadhaar notification
+    if (docType.includes("e-Aadhaar") || docType.includes("Full Card")) {
+      mergeStatusIndicator.textContent = "e-Aadhaar (Full KYC)";
+      showToast("e-Aadhaar Processed", "All demographic details and address filled in one scan.");
+    } else if (formState.documentsScanned.length > 1) {
       mergeStatusIndicator.textContent = `Merged (${formState.documentsScanned.join(" + ")})`;
       showToast("Smart Merged", `Merged details from ${docType}.`);
     } else {

@@ -15,25 +15,37 @@ def normalize_date_string(raw_date: str) -> Optional[str]:
         '15'08/2001' -> '15/08/2001'
         '15-08-2001' -> '15/08/2001'
         '15.08.2001' -> '15/08/2001'
-        '15 08 2001' -> '15/08/2001'
+        '2001-08-15' -> '15/08/2001'
+        '1995'       -> '01/01/1995'
     """
     if not raw_date:
         return None
 
-    # Replace common OCR misreads of slashes/delimiters
     cleaned = raw_date.strip()
-    cleaned = re.sub(r"['\"`|\\.]", "/", cleaned)
-    cleaned = re.sub(r"[-_]", "/", cleaned)
-    cleaned = re.sub(r"\s+", "/", cleaned)
 
-    # Search for full DD/MM/YYYY or YYYY/MM/DD
-    match = re.search(r"\b(\d{1,2})[/](\d{1,2})[/](\d{4})\b", cleaned)
+    # 1. Search for YYYY-MM-DD or YYYY/MM/DD
+    iso_match = re.search(r"\b(19\d{2}|20[0-2]\d)[/.-](\d{1,2})[/.-](\d{1,2})\b", cleaned)
+    if iso_match:
+        y, m, d = iso_match.group(1), int(iso_match.group(2)), int(iso_match.group(3))
+        if 1 <= m <= 12 and 1 <= d <= 31:
+            return f"{d:02d}/{m:02d}/{y}"
+
+    # Replace common OCR misreads of slashes/delimiters
+    cleaned_delims = re.sub(r"['\"`|\\.]", "/", cleaned)
+    cleaned_delims = re.sub(r"[-_]", "/", cleaned_delims)
+    cleaned_delims = re.sub(r"\s+", "/", cleaned_delims)
+
+    # 2. Search for full DD/MM/YYYY
+    match = re.search(r"\b(\d{1,2})[/](\d{1,2})[/](\d{4})\b", cleaned_delims)
     if match:
-        d, m, y = match.group(1), match.group(2), match.group(3)
-        # Pad day and month with leading zero if needed
-        return f"{int(d):02d}/{int(m):02d}/{y}"
+        p1, p2, y = int(match.group(1)), int(match.group(2)), match.group(3)
+        # Check if p1 is day and p2 is month, or p1 is month and p2 is day
+        if 1 <= p1 <= 31 and 1 <= p2 <= 12:
+            return f"{p1:02d}/{p2:02d}/{y}"
+        elif 1 <= p1 <= 12 and 1 <= p2 <= 31:
+            return f"{p2:02d}/{p1:02d}/{y}"
 
-    # Search for Year only (common on old Aadhaar: 'Year of Birth: 1978')
+    # 3. Search for Year only (common on Aadhaar: 'Year of Birth: 1978' or 'जन्म वर्ष: 1954')
     year_match = re.search(r"\b(19\d{2}|20[0-2]\d)\b", cleaned)
     if year_match:
         return f"01/01/{year_match.group(1)}"

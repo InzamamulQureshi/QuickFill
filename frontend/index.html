@@ -104,8 +104,8 @@
               <polyline points="17 8 12 3 7 8"></polyline>
               <line x1="12" y1="3" x2="12" y2="15"></line>
             </svg>
-            <p class="dropzone-primary">Drop ID card image or paste</p>
-            <p class="dropzone-secondary">PNG, JPG, or WEBP • Ctrl+V to paste</p>
+            <p class="dropzone-primary">Drop ID card image or PDF</p>
+            <p class="dropzone-secondary">PDF, PNG, JPG, or WEBP • e-Aadhaar & PVC Cards</p>
             <div class="dropzone-actions">
               <button type="button" class="btn btn-secondary btn-sm" id="browseFileBtn">Browse File</button>
               <button type="button" class="btn btn-secondary btn-sm" id="pasteClipboardBtn" title="Paste image from clipboard">
@@ -156,6 +156,7 @@
       <div class="demo-samples">
         <span class="demo-label">Quick Test Cards:</span>
         <div class="demo-buttons">
+          <button type="button" class="sample-pill" data-sample="eaadhaar_full">e-Aadhaar Full</button>
           <button type="button" class="sample-pill" data-sample="aadhaar_front">Aadhaar Front</button>
           <button type="button" class="sample-pill" data-sample="aadhaar_back">Aadhaar Back</button>
           <button type="button" class="sample-pill" data-sample="pan">PAN Card</button>
@@ -268,13 +269,13 @@
         
         <div class="modal-feature-list">
           <div class="feature-item">
-            <strong>Engine:</strong> Windows Media Native OCR + OpenCV Enhancement
+            <strong>Supported Documents:</strong> e-Aadhaar PDF, New PVC Aadhaar Card, Physical Aadhaar (Front & Back), PAN Card
           </div>
           <div class="feature-item">
-            <strong>Supported Documents:</strong> Aadhaar Card (Front & Back), PAN Card
+            <strong>PDF & Combined Support:</strong> Automatically auto-fills all fields from full e-Aadhaar PDFs and dual-side scans
           </div>
           <div class="feature-item">
-            <strong>Smart Merging:</strong> Combines data across multiple card scans without overwriting
+            <strong>Smart Merging:</strong> Combines data across scans and never overwrites valid fields with empty values
           </div>
           <div class="feature-item">
             <strong>Privacy:</strong> Fully offline, zero data transmitted over external networks

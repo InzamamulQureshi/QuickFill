@@ -6,6 +6,7 @@ real-time age calculation, and static web UI serving.
 import io
 import os
 import base64
+import time
 from typing import Optional, Dict, Any
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,9 +17,11 @@ from pydantic import BaseModel
 from .ocr_engine import OCREngineManager
 from .parsers.detector import DocumentDetector
 from .parsers.date_util import calculate_age
+from .pdf_processor import PDFProcessor
 from .sample_generator import (
     generate_aadhaar_front_sample,
     generate_aadhaar_back_sample,
+    generate_eaadhaar_full_sample,
     generate_pan_card_sample
 )
 
@@ -57,11 +60,18 @@ async def get_system_status():
         "app_name": "Quick Fill (QF)",
         "version": "1.0.0",
         "supported_documents": [
+            "e-Aadhaar PDF (Full Document)",
+            "Aadhaar PVC Card (Front & Back)",
             "Aadhaar Card (Front)",
             "Aadhaar Card (Back)",
             "PAN Card"
         ],
-        "ocr_engines": engine_status
+        "ocr_engines": engine_status,
+        "features": {
+            "pdf_support": True,
+            "masked_aadhaar": True,
+            "smart_merge": True
+        }
     }
 
 
@@ -82,6 +92,8 @@ async def get_sample_card(card_type: str):
         data = generate_aadhaar_front_sample()
     elif card_type in ("aadhaar_back", "aadhar_back"):
         data = generate_aadhaar_back_sample()
+    elif card_type in ("eaadhaar_full", "eaadhaar", "e_aadhaar", "aadhaar_full"):
+        data = generate_eaadhaar_full_sample()
     elif card_type in ("pan", "pan_card"):
         data = generate_pan_card_sample()
     else:
@@ -95,14 +107,17 @@ async def extract_from_upload(
     file: Optional[UploadFile] = File(None),
     image_data: Optional[str] = Form(None),
     doc_hint: Optional[str] = Form("auto"),
-    engine: Optional[str] = Form("auto")
+    engine: Optional[str] = Form("auto"),
+    password: Optional[str] = Form("")
 ):
     """
-    Main extraction endpoint. Accepts either:
-    1. Multi-part file upload ('file')
-    2. Base64 data URI string ('image_data') from webcam snapshot
+    Main extraction endpoint. Accepts:
+    1. Multi-part file upload ('file') - PNG, JPG, WEBP, or PDF
+    2. Base64 data URI string ('image_data') from webcam snapshot or clipboard
+    3. Optional 'password' for password-protected e-Aadhaar PDFs
     """
     image_bytes = None
+    filename = file.filename if file else ""
 
     if file:
         image_bytes = await file.read()
@@ -116,10 +131,82 @@ async def extract_from_upload(
             raise HTTPException(status_code=400, detail=f"Invalid base64 image data: {str(e)}")
 
     if not image_bytes:
-        raise HTTPException(status_code=400, detail="No image provided. Please upload a file or capture via camera.")
+        raise HTTPException(status_code=400, detail="No document provided. Please upload a file, paste an image, or use camera.")
 
     try:
-        # Step 1: Run unified OCR with computer vision preprocessing
+        # Handle PDF documents (e-Aadhaar or scanned multi-page PDF)
+        if PDFProcessor.is_pdf(image_bytes, filename=filename):
+            start_time = time.perf_counter()
+            pdf_data = PDFProcessor.extract_pdf_data(image_bytes, password=password or "")
+
+            if pdf_data.get("is_encrypted") and not pdf_data.get("is_decrypted"):
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "success": False,
+                        "error": "Password Protected PDF",
+                        "message": "This e-Aadhaar PDF is password-protected. UIDAI password format is: First 4 letters of your Name in CAPITAL letters followed by 4-digit Year of Birth (e.g. AARA1995)."
+                    }
+                )
+
+            preview_url = pdf_data.get("preview_data_url", "")
+            rendered_images = pdf_data.get("rendered_images", [])
+
+            digital_text = pdf_data.get("digital_text", "")
+            digital_lines = pdf_data.get("digital_lines", [])
+
+            ocr_text = ""
+            ocr_lines = []
+            engine_used = "Digital PDF Parser"
+
+            # If rendered page image is available, run OCR to capture graphical/bilingual text
+            if rendered_images:
+                try:
+                    buf = io.BytesIO()
+                    rendered_images[0].save(buf, format="PNG")
+                    page_ocr = await OCREngineManager.recognize(buf.getvalue(), engine=engine or "auto")
+                    ocr_text = page_ocr.get("raw_text", "")
+                    ocr_lines = page_ocr.get("lines", [])
+                    engine_used = f"{page_ocr.get('engine', 'OCR')} + Digital PDF"
+                except Exception as e:
+                    print(f"[!] Warning during PDF page OCR: {e}")
+
+            # Merge digital and OCR lines
+            all_lines = []
+            seen = set()
+            for l in digital_lines + ocr_lines:
+                cleaned = l.strip()
+                if cleaned and cleaned not in seen:
+                    all_lines.append(cleaned)
+                    seen.add(cleaned)
+
+            combined_text = digital_text + "\n" + ocr_text if ocr_text else digital_text
+            if not combined_text.strip():
+                combined_text = "\n".join(all_lines)
+
+            parsed_data = DocumentDetector.parse_document(
+                raw_text=combined_text,
+                lines=all_lines,
+                doc_hint=doc_hint or "auto"
+            )
+
+            elapsed_ms = round((time.perf_counter() - start_time) * 1000, 1)
+
+            return {
+                "success": True,
+                "detected_type": parsed_data.get("detected_type", "e-Aadhaar (Full Card)"),
+                "data": parsed_data,
+                "preview_image": preview_url,
+                "ocr_meta": {
+                    "engine": engine_used,
+                    "processing_time_ms": elapsed_ms,
+                    "preprocessing": {"pdf_pages": pdf_data.get("page_count", 1)},
+                    "raw_text": combined_text,
+                    "lines_count": len(all_lines)
+                }
+            }
+
+        # Step 1: Run unified OCR with computer vision preprocessing for image
         ocr_result = await OCREngineManager.recognize(image_bytes, engine=engine or "auto")
 
         # Step 2: Parse and classify document
