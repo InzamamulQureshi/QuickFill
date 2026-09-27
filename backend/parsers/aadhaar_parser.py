@@ -6,8 +6,9 @@ Extracts fields from:
 - e-Aadhaar PDFs & full document cutouts containing front & back in one
 - Masked Aadhaar cards & Baal Aadhaar
 """
+from __future__ import annotations
 import re
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from .common import (
     INDIAN_STATES, PINCODE_REGEX, AADHAAR_REGEX, MASKED_AADHAAR_REGEX,
     clean_line, is_header_noise, format_aadhaar_number,
