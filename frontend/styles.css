@@ -24,10 +24,10 @@
   --text-secondary: #a1a1aa;
   --text-muted: #71717a;
 
-  /* Palette 3: Unified Accent (Identical across Light & Dark) */
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
-  --accent-subtle: rgba(37, 99, 235, 0.14);
+  /* Palette 3: Unified Warm Terracotta Accent (Identical across Light & Dark) */
+  --accent: #c86249;
+  --accent-hover: #b2503a;
+  --accent-subtle: rgba(200, 98, 73, 0.14);
   --accent-contrast: #ffffff;
 
   /* Shared Tokens */
@@ -42,21 +42,21 @@
 
 body.light-theme {
   /* Palette 1: Surface Neutral */
-  --bg-base: #f9f9fb;
+  --bg-base: #fbfbfa;
   --bg-surface: #ffffff;
-  --bg-subtle: #f1f2f5;
-  --border: #e2e4e9;
-  --border-hover: #cbd0d8;
+  --bg-subtle: #f2f2f0;
+  --border: #e5e5e3;
+  --border-hover: #d1d1cd;
 
   /* Palette 2: Content Neutral */
-  --text-primary: #111827;
-  --text-secondary: #4b5563;
-  --text-muted: #6b7280;
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #71717a;
 
-  /* Palette 3: Unified Accent (Identical across Light & Dark) */
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
-  --accent-subtle: rgba(37, 99, 235, 0.10);
+  /* Palette 3: Unified Warm Terracotta Accent (Identical across Light & Dark) */
+  --accent: #c86249;
+  --accent-hover: #b2503a;
+  --accent-subtle: rgba(200, 98, 73, 0.10);
   --accent-contrast: #ffffff;
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
