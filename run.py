@@ -18,10 +18,9 @@ def open_browser():
 
 
 def main():
-    print("=" * 65)
-    print("  🚀 QUICK FILL (QF) - Intelligent ID Form Auto-Filler")
-    print("  Course Project: 2nd Year MPL (Modern Programming Language - Python)")
-    print("=" * 65)
+    print("=" * 60)
+    print("  Quick Fill (QF) - Local ID Form Auto-Filler")
+    print("=" * 60)
 
     # Check primary modules
     try:
