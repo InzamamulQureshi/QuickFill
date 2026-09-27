@@ -105,9 +105,17 @@ document.addEventListener("DOMContentLoaded", () => {
   /* --------------------------------------------------------------------------
      1. Status Check & Initialization
      -------------------------------------------------------------------------- */
+  const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.port === "8000"
+    ? ""
+    : (localStorage.getItem("qf_api_base") || window.QF_API_BASE || "");
+
+  function api(endpoint) {
+    return `${API_BASE}${endpoint}`;
+  }
+
   async function checkBackendStatus() {
     try {
-      const res = await fetch("/api/status");
+      const res = await fetch(api("/api/status"));
       if (res.ok) {
         const data = await res.json();
         const primary = data.ocr_engines?.primary_engine || "winocr";
@@ -270,7 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
     formData.append("engine", "auto");
 
     try {
-      const res = await fetch("/api/extract", {
+      const res = await fetch(api("/api/extract"), {
         method: "POST",
         body: formData
       });
@@ -452,7 +460,7 @@ document.addEventListener("DOMContentLoaded", () => {
       displayPreview(`/api/samples/${sampleType}`);
 
       try {
-        const response = await fetch(`/api/samples/${sampleType}`);
+        const response = await fetch(api(`/api/samples/${sampleType}`));
         const blob = await response.blob();
         pill.style.opacity = "1";
         processImageExtraction(blob, false);
