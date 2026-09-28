@@ -94,8 +94,9 @@ class AadhaarParser:
                         cand_name = re.split(r"\b(?:Address|पता|D/O|S/O|W/O|C/O|W/0|C/0|S/0|D/0|Father|Mother|Husband|Wife|Spouse|Guardian|Care\s*of|Child\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Husband\s*of|পিতা|মাতা|স্বামী|স্ত্রী|पिता|माता|पति|पत्नी)\b|[\"|~]", cand_clean)[0].strip()
                         if is_valid_person_name(cand_name):
                             words = [w for w in re.findall(r"[A-Za-z]+", cand_name) if len(w) > 1 and w.upper() not in FORBIDDEN_NAME_WORDS]
-                            if len(words) >= 2:
-                                return " ".join(words).title(), 0.96
+                            if len(words) >= 1:
+                                conf = 0.96 if len(words) >= 2 else 0.92
+                                return " ".join(words).title(), conf
 
         # Strategy 2: Real DOB line (prioritize explicit DOB prefix over Issue / Download date)
         dob_line_idx = -1
@@ -141,8 +142,9 @@ class AadhaarParser:
                 cand_clean = re.split(r"\b(?:Address|पता|D/O|S/O|W/O|C/O|W/0|C/0|S/0|D/0|Father|Mother|Husband|Wife|Spouse|Guardian|Care\s*of|Child\s*of|Son\s*of|Daughter\s*of|Wife\s*of|পিতা|মাতা|স্বামী|স্ত্রী|पिता|माता|पति|पत्नी)\b|[\"|~]", cand_clean)[0].strip()
                 if is_valid_person_name(cand_clean):
                     words = [w for w in re.findall(r"[A-Za-z]+", cand_clean) if len(w) > 1 and w.upper() not in FORBIDDEN_NAME_WORDS]
-                    if len(words) >= 2:
-                        return " ".join(words).title(), 0.94
+                    if len(words) >= 1:
+                        conf = 0.94 if len(words) >= 2 else 0.91
+                        return " ".join(words).title(), conf
 
         # Strategy 3: Explicit Name: label
         name_label_match = re.search(r"(?:Name|Resident\s*Name)[\s:]*([A-Za-z\s.]{3,40})", raw_text, re.IGNORECASE)
@@ -150,10 +152,12 @@ class AadhaarParser:
             candidate = name_label_match.group(1).strip()
             if is_valid_person_name(candidate):
                 words = [w for w in re.findall(r"[A-Za-z]+", candidate) if len(w) > 1 and w.upper() not in FORBIDDEN_NAME_WORDS]
-                if len(words) >= 2:
-                    return " ".join(words).title(), 0.93
+                if len(words) >= 1:
+                    conf = 0.93 if len(words) >= 2 else 0.90
+                    return " ".join(words).title(), conf
 
         # Strategy 4: Fallback search in upper lines
+        best_cand = ""
         for line in cleaned_lines[:25]:
             if is_instruction_noise(line) or is_header_noise(line):
                 continue
@@ -163,6 +167,11 @@ class AadhaarParser:
                 words = [w for w in re.findall(r"[A-Za-z]+", cand_clean) if len(w) > 1 and w.upper() not in FORBIDDEN_NAME_WORDS]
                 if len(words) >= 2:
                     return " ".join(words).title(), 0.85
+                elif len(words) == 1 and not best_cand:
+                    best_cand = words[0].title()
+
+        if best_cand:
+            return best_cand, 0.80
 
         return "", 0.0
 

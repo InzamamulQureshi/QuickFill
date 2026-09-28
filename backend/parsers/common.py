@@ -246,8 +246,8 @@ def is_valid_person_name(cand: str) -> bool:
     # Person name should be 1 to 6 words
     if not (1 <= len(words) <= 6):
         return False
-    # If single word, must be at least 4 letters (e.g. 'Amit', not 'Wm' or 'Vib')
-    if len(words) == 1 and len(words[0]) < 4:
+    # If single word, must be at least 3 letters (e.g. 'Ram', 'Raj', 'Dev', 'Ali', 'Amit')
+    if len(words) == 1 and len(words[0]) < 3:
         return False
     return True
 
