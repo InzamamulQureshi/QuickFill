@@ -88,7 +88,7 @@ FORBIDDEN_NAME_WORDS = {
     "DOCUMENTS", "SUPPORT", "UPDATED", "ENTITIES", "SEEKING", "CONSENT",
     "WEST", "EAST", "NORTH", "SOUTH", "CHAWL", "COMPOUND", "URBAN", "RURAL",
     "COLONY", "SECTOR", "BLOCK", "LANE", "GALI", "MOHALLA", "TALUKA", "TEHSIL",
-    "GOV", "GOVIN", "GOVAM", "UIDAI", "EMAIL", "WWW", "HELP", "VERIFY", "SECURE", "QRCODE", "QR", "XML", "CODE", "ELECTRONICALLY", "GENERATED", "LETTER", "ISSUED"
+    "YOUR", "YOURAADHAAR", "AADHAARNO", "NO", "GOV", "GOVIN", "GOVAM", "UIDAI", "EMAIL", "WWW", "HELP", "VERIFY", "SECURE", "QRCODE", "QR", "XML", "CODE", "ELECTRONICALLY", "GENERATED", "LETTER", "ISSUED"
 }
 
 # UIDAI e-Aadhaar informational boilerplate bullet points
@@ -110,12 +110,68 @@ INSTRUCTION_TERMS = [
 ]
 
 
+def refine_text_spacing(text: str) -> str:
+    """
+    Normalizes spacing between English words, names, punctuation, and numeric boundaries
+    to ensure text produced by deep-learning OCR models (like RapidOCR) has natural inter-word spacing.
+    """
+    if not text:
+        return ""
+    # Normalize unicode spaces and tabs
+    s = text.replace("\u00a0", " ").replace("\u200b", " ").replace("\t", " ")
+
+    # Punctuation spacing: comma, colon, semicolon followed by letter/number without space
+    s = re.sub(r"([,;:])(?=[A-Za-z0-9])", r"\1 ", s)
+
+    # Parentheses spacing
+    s = re.sub(r"([A-Za-z0-9])\(", r"\1 (", s)
+    s = re.sub(r"\)(?=[A-Za-z0-9])", r") ", s)
+
+    # Relationship slashes: keep 'C/O', 'S/O', 'D/O', 'W/O' clean
+    s = re.sub(r"\b([CSDWH]/[Oic])(?=[A-Za-z])", r"\1 ", s, flags=re.IGNORECASE)
+    # Add spacing around '/' between full words (e.g. Male/MALE -> Male / MALE, Date of Birth/DOB -> Date of Birth / DOB)
+    s = re.sub(r"(?<=[a-zA-Z]{2})/(?=[a-zA-Z]{2})", r" / ", s)
+
+    # CamelCase: split lowercase followed by uppercase (e.g. 'MohammadFarid' -> 'Mohammad Farid')
+    s = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", s)
+
+    # Number followed by word or label (e.g. 'HillNo3' -> 'Hill No 3')
+    s = re.sub(r"\b(No|Room|R|Plot|Flat|Ward|Sector|Block|Hill)([0-9]+)\b", r"\1 \2", s, flags=re.IGNORECASE)
+
+    # Common glued words on Indian IDs
+    common_glued = [
+        (r"\bGovernmentof\b", "Government of"),
+        (r"\bAuthorityof\b", "Authority of"),
+        (r"\bDateof\b", "Date of"),
+        (r"\bproofof\b", "proof of"),
+        (r"\bnotof\b", "not of"),
+        (r"\bAadhaarno\b", "Aadhaar no"),
+        (r"\bEnrolmentNo\b", "Enrolment No"),
+        (r"\bYourAadhaarNo\b", "Your Aadhaar No"),
+        (r"\bYourAadhaar\b", "Your Aadhaar"),
+        (r"\bYearof\b", "Year of"),
+        (r"\bshouldbe\b", "should be"),
+        (r"\bnotfor\b", "not for"),
+    ]
+    for pat, repl in common_glued:
+        s = re.sub(pat, repl, s, flags=re.IGNORECASE)
+
+    # Letter followed by 6-digit pincode
+    s = re.sub(r"([A-Za-z])(?=[1-9]\d{5}\b)", r"\1 ", s)
+
+    # Collapse multiple spaces
+    s = re.sub(r" +", " ", s).strip()
+    return s
+
+
 def clean_line(text: str) -> str:
-    """Removes stray symbols, normalizes unicode punctuation, and trims whitespace."""
+    """Removes stray symbols, normalizes unicode punctuation, and refines inter-word spacing."""
     if not text:
         return ""
     # Normalize unicode fullwidth punctuation to standard ASCII equivalents
     text = text.replace("，", ",").replace("：", ":").replace("；", ";").replace("（", "(").replace("）", ")").replace("—", "-")
+    # Apply natural spacing refinement
+    text = refine_text_spacing(text)
     cleaned = re.sub(r"^[^a-zA-Z0-9]+|[^a-zA-Z0-9)]+$", "", text.strip())
     cleaned = re.sub(r"\s+", " ", cleaned)
     return cleaned
@@ -213,46 +269,55 @@ def format_aadhaar_number(raw_num: str) -> str:
 
 def extract_aadhaar_number(text: str) -> Optional[str]:
     """
-    Extracts an Aadhaar number from text supporting standard, masked, and contiguous formats.
-    Avoids accidentally capturing 16-digit Virtual IDs (VID) or helpline 1947.
+    Extracts an Aadhaar number from text supporting standard, masked, contiguous,
+    unevenly spaced, and common OCR-corrupted formats (e.g. O->0, I/l->1).
+    Carefully isolates from 16-digit Virtual IDs (VID), 10-digit mobiles, 14-digit enrolment numbers,
+    and the 1947 UIDAI helpline.
     """
     if not text:
         return None
 
-    # Strip UIDAI helpline 1947 first so it doesn't glue to a 12-digit Aadhaar to form 16 digits
+    # Step 1: Strip 1947 helpline noise
     clean_text = re.sub(r"[@#]?\b1947\b", "", text)
 
-    # Strip any 16-digit Virtual ID (VID) lines (VIDs start with 9 or have explicit VID: prefix)
-    clean_text = re.sub(r"\bVID\s*[:\s]*\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\b", "", clean_text, flags=re.IGNORECASE)
-    clean_text = re.sub(r"\b9\d{3}\s\d{4}\s\d{4}\s\d{4}\b", "", clean_text)
+    # Step 2: Strip explicit VID lines (16 digits starting with 9 or labeled VID)
+    clean_text = re.sub(r"\bVID\s*[:\s]*[0-9IlO\s-]{16,22}\b", "", clean_text, flags=re.IGNORECASE)
+    clean_text = re.sub(r"\b9\d{3}[\s-]\d{4}[\s-]\d{4}[\s-]\d{4}\b", "", clean_text)
+    clean_text = re.sub(r"(?<!\d)9\d{15}(?!\d)", "", clean_text)
 
-    # 1. Standard 12 digits: 2345 6789 0123
-    std_m = re.search(r"\b([2-9]\d{3}\s\d{4}\s\d{4})\b", clean_text)
+    # Step 3: Match standard 4-4-4 format with flexible whitespace (1 or more spaces, tabs, dashes, dots)
+    std_m = re.search(r"(?<!\d)([2-9]\d{3})[\s.-]+(\d{4})[\s.-]+(\d{4})(?!\d)", clean_text)
     if std_m:
-        return std_m.group(1)
+        return f"{std_m.group(1)} {std_m.group(2)} {std_m.group(3)}"
 
-    # 2. Masked format: XXXX XXXX 1234 or •••• •••• 1234
-    masked_m = re.search(r"\b([X*•x]{4}\s[X*•x]{4}\s\d{4})\b", clean_text)
+    # Step 4: Masked formats (XXXX XXXX 1234 or XXXXXXXX1234 or •••• •••• 1234)
+    masked_m = re.search(r"(?<![A-Za-z0-9])([X*•x]{4})[\s.-]*([X*•x]{4})[\s.-]*(\d{4})(?!\d)", clean_text)
     if masked_m:
-        return masked_m.group(1).upper()
+        return f"{masked_m.group(1).upper()} {masked_m.group(2).upper()} {masked_m.group(3)}"
 
-    # 3. Contiguous masked: XXXXXXXX1234
-    contig_masked = re.search(r"\b([X*•x]{8}\d{4})\b", clean_text)
-    if contig_masked:
-        s = contig_masked.group(1).upper()
-        return f"{s[0:4]} {s[4:8]} {s[8:12]}"
-
-    # 4. Contiguous 12 digits (ensure not part of a longer number like 16-digit VID)
+    # Step 5: Contiguous 12 digits (strictly 12 digits starting 2-9, not part of longer number)
     contig_m = re.search(r"(?<!\d)([2-9]\d{11})(?!\d)", clean_text)
     if contig_m:
         d = contig_m.group(1)
         return f"{d[0:4]} {d[4:8]} {d[8:12]}"
 
-    # 5. Dashed format: 2345-6789-0123
-    dash_m = re.search(r"\b([2-9]\d{3}[-]\d{4}[-]\d{4})\b", clean_text)
-    if dash_m:
-        d = re.sub(r"\D", "", dash_m.group(1))
-        return f"{d[0:4]} {d[4:8]} {d[8:12]}"
+    # Step 6: Unevenly grouped 12 digits (e.g. 4-8 or 8-4 or 3-5-4)
+    for line in clean_text.splitlines():
+        # Strip enrolment numbers like 2821/27092/02859 or dates like 20/05/1979
+        line_no_slash = re.sub(r"\d+/\d+(?:/\d+)?", "", line)
+        digits_only = re.sub(r"\D", "", line_no_slash)
+        if len(digits_only) == 12 and digits_only[0] in "23456789":
+            return f"{digits_only[0:4]} {digits_only[4:8]} {digits_only[8:12]}"
+
+    # Step 7: OCR typo correction on 12-character blocks (O->0, I/l->1, B->8, S->5)
+    char_map = str.maketrans("OIlBS", "01185", " ")
+    for line in clean_text.splitlines():
+        typo_m = re.search(r"(?<![A-Za-z0-9])([2-9][0-9OIlBS]{3})[\s.-]+([0-9OIlBS]{4})[\s.-]+([0-9OIlBS]{4})(?![A-Za-z0-9])", line)
+        if typo_m:
+            raw_cand = typo_m.group(1) + typo_m.group(2) + typo_m.group(3)
+            fixed_digits = raw_cand.translate(char_map)
+            if len(fixed_digits) == 12 and fixed_digits[0] in "23456789":
+                return f"{fixed_digits[0:4]} {fixed_digits[4:8]} {fixed_digits[8:12]}"
 
     return None
 

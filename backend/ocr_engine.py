@@ -18,6 +18,7 @@ import numpy as np
 
 # Import preprocessor
 from .preprocessor import ImagePreprocessor
+from .parsers.common import refine_text_spacing
 
 # 1. Check RapidOCR availability (Primary Neural OCR Engine)
 RAPIDOCR_AVAILABLE = False
@@ -131,10 +132,7 @@ class OCREngineManager:
             for item in ocr_result:
                 text = item[1].strip()
                 if text:
-                    # Only separate relationship prefixes attached to names (e.g. C/OHeesamuddin -> C/O Heesamuddin)
-                    text = re.sub(r"\b([CSDWH]/[Oic])(?=[A-Za-z])", r"\1 ", text, flags=re.IGNORECASE)
-                    # Automatically separate glued CamelCase words (e.g. MohammadFaridKhan -> Mohammad Farid Khan)
-                    text = re.sub(r"([a-z])([A-Z])", r"\1 \2", text)
+                    text = refine_text_spacing(text)
                     lines.append(text)
 
         raw_text = "\n".join(lines)
