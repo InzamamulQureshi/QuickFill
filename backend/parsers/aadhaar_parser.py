@@ -25,7 +25,7 @@ class AadhaarParser:
     def extract_dob_and_age(cls, raw_text: str, lines: List[str]) -> Tuple[str, Dict[str, Any], float]:
         """Extracts standard DD/MM/YYYY date of birth and calculates age."""
         # 1. Standard DOB prefixes with full date (Highest priority)
-        pat_explicit = r"(?:DOB|D\.?O\.?B|Date\s*of\s*Birth|जन्म\s*तिथि|जन्म\s*तारीख)[\s:/.-]*([0-9]{1,2}[/.-][0-9]{1,2}[/.-][0-9]{4})"
+        pat_explicit = r"(?:DOB|D[0O]B|D\.?[0O]\.?B|Date\s*of\s*Birth|जन्म\s*तिथि|जन्म\s*तारीख)[\s:/.-]*([0-9]{1,2}[/.-][0-9]{1,2}[/.-][0-9]{4})"
         m = re.search(pat_explicit, raw_text, re.IGNORECASE)
         if m:
             normalized = normalize_date_string(m.group(1))
@@ -107,7 +107,7 @@ class AadhaarParser:
                 continue
             if "ISSUED" in line.upper() or "ISSUE DATE" in line.upper() or "DOWNLOAD DATE" in line.upper():
                 continue
-            if re.search(r"(?:DOB|Birth|जन्म|Year of Birth)[\s:/.-]*([0-9]{1,2}[/.-][0-9]{1,2}[/.-][0-9]{4}|[1-2][0-9]{3})", line, re.IGNORECASE):
+            if re.search(r"(?:DOB|D[0O]B|Birth|जन्म|Year of Birth)[\s:/.-]*([0-9]{1,2}[/.-][0-9]{1,2}[/.-][0-9]{4}|[1-2][0-9]{3})", line, re.IGNORECASE):
                 dob_line_idx = idx
                 break
 
@@ -124,13 +124,21 @@ class AadhaarParser:
                     dob_line_idx = idx
                     break
 
+        father_prefix_pat = re.compile(
+            r"(?:^|\b)(?:Father|Mother|Husband|Spouse|Guardian|পিতা|पिता|C/O|S/O|D/O|W/O|H/O)[\s:]*",
+            re.IGNORECASE
+        )
+
         if dob_line_idx > 0:
-            for i in range(dob_line_idx - 1, max(-1, dob_line_idx - 4), -1):
+            for i in range(dob_line_idx - 1, max(-1, dob_line_idx - 5), -1):
                 line = cleaned_lines[i]
                 if is_instruction_noise(line) or is_header_noise(line):
                     continue
+                # If this line contains father / spouse / guardian label, skip it for resident name
+                if father_prefix_pat.search(line):
+                    continue
                 cand_clean = re.sub(r"^[\d\s.,|:;~*\"'#/-]+", "", line).strip()
-                cand_clean = re.split(r"\b(?:Address|पता|D/O|S/O|W/O|C/O)\b|[\"|~]", cand_clean)[0].strip()
+                cand_clean = re.split(r"\b(?:Address|पता|D/O|S/O|W/O|C/O|Father|Mother|Husband|Spouse|Guardian|পিতা|पिता)\b|[\"|~]", cand_clean)[0].strip()
                 if is_valid_person_name(cand_clean):
                     words = [w for w in re.findall(r"[A-Za-z]+", cand_clean) if len(w) > 1 and w.upper() not in FORBIDDEN_NAME_WORDS]
                     if len(words) >= 2:
@@ -167,8 +175,8 @@ class AadhaarParser:
         cleaned_lines = [clean_line(l) for l in lines if clean_line(l)]
 
         prefix_pattern = re.compile(
-            r"(?:Address|पता)[\s:]*(?:C/O|S/O|D/O|W/O|H/O|SIC|DIC|WIC|CIC|Care\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Husband\s*of|आत्मज|पुत्र|पुत्री|पत्नी)[\s:.)-]+(?=[A-Za-z])"
-            r"|(?:\b(?:C/O|S/O|D/O|W/O|H/O|Care\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Husband\s*of|आत्मज|पुत्र|पुत्री|पत्नी)\b[\s:.)-]+)"
+            r"(?:Address|पता)[\s:]*(?:C/O|S/O|D/O|W/O|H/O|SIC|DIC|WIC|CIC|Care\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Husband\s*of|Father|Mother|Spouse|Guardian|आत्मज|पुत्र|पुत्री|पत्नी|পিতা|माता)[\s:.)-]+(?=[A-Za-z])"
+            r"|(?:\b(?:C/O|S/O|D/O|W/O|H/O|Care\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Husband\s*of|Father|Mother|Spouse|Guardian|आत्मज|पुत्र|पुत्री|पत्नी|পিতা|माता)\b[\s:.)-]+)"
             r"|(?:\b(?:SO|DO|WO|CO|HO)\b[\s:.-]+(?=[A-Za-z]))"
             r"|(?:\"?1/[80o]\s*[JjDdCcSs][Oo][\s:.-]+)",
             re.IGNORECASE
@@ -457,6 +465,12 @@ class AadhaarParser:
         if name:
             result["name"] = name
             result["confidence_scores"]["name"] = name_conf
+
+        # 5. Father / Spouse Name (printed on front of older Aadhaar cards)
+        father_spouse, fs_conf = cls.extract_father_spouse(raw_text, lines)
+        if father_spouse and father_spouse.lower() != (name or "").lower():
+            result["father_spouse_name"] = father_spouse
+            result["confidence_scores"]["father_spouse_name"] = fs_conf
 
         return result
 
