@@ -143,6 +143,25 @@ class AadhaarParser:
             re.IGNORECASE
         )
 
+        # Pass 1: Prioritize lines with explicit 'Address' or 'पता' prefix
+        for line in cleaned_lines:
+            if is_instruction_noise(line):
+                continue
+            if re.search(r"Address|पता", line, re.IGNORECASE):
+                m = prefix_pattern.search(line)
+                if m:
+                    candidate = line[m.end():].strip()
+                    for delim in [",", " -", ";", "Flat", "H.No", "House", "Plot", "Ward", "Village", "Post", "Dist", "Near", "Street", "Floor"]:
+                        if delim.lower() in candidate.lower():
+                            pos = candidate.lower().find(delim.lower())
+                            candidate = candidate[:pos].strip()
+                    candidate = re.sub(r"^[^a-zA-Z]+|[^a-zA-Z]+$", "", candidate).strip()
+                    if is_valid_person_name(candidate):
+                        words = [w for w in candidate.split() if w.isalpha() and len(w) > 1]
+                        if words:
+                            return " ".join(words).title(), 0.95
+
+        # Pass 2: Any line containing C/O, S/O, etc.
         for line in cleaned_lines:
             if is_instruction_noise(line):
                 continue
@@ -158,7 +177,8 @@ class AadhaarParser:
                 candidate = re.sub(r"^[^a-zA-Z]+|[^a-zA-Z]+$", "", candidate).strip()
                 if is_valid_person_name(candidate):
                     words = [w for w in candidate.split() if w.isalpha() and len(w) > 1]
-                    return " ".join(words).title(), 0.94
+                    if words:
+                        return " ".join(words).title(), 0.94
 
         # Fallback regex across entire raw_text
         m_raw = re.search(
