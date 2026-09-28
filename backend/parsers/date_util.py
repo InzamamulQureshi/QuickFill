@@ -45,6 +45,20 @@ def normalize_date_string(raw_date: str) -> Optional[str]:
         elif 1 <= p1 <= 12 and 1 <= p2 <= 31:
             return f"{p2:02d}/{p1:02d}/{y}"
 
+    # 2b. Search with OCR character confusion recovery (B->8, O/o->0, I/l->1, S->5)
+    m_sub = re.search(r"\b([0-9BOISlo]{1,2})[/]([0-9BOISlo]{1,2})[/]([0-9BOISlo]{4})\b", cleaned_delims)
+    if m_sub:
+        table = str.maketrans("BOISlo", "801510")
+        p1 = m_sub.group(1).translate(table)
+        p2 = m_sub.group(2).translate(table)
+        y = m_sub.group(3).translate(table)
+        if p1.isdigit() and p2.isdigit() and y.isdigit() and len(y) == 4:
+            d, m = int(p1), int(p2)
+            if 1 <= d <= 31 and 1 <= m <= 12:
+                return f"{d:02d}/{m:02d}/{y}"
+            elif 1 <= d <= 12 and 1 <= m <= 31:
+                return f"{m:02d}/{d:02d}/{y}"
+
     # 3. Search for Year only (common on Aadhaar: 'Year of Birth: 1978' or 'जन्म वर्ष: 1954')
     year_match = re.search(r"\b(19\d{2}|20[0-2]\d)\b", cleaned)
     if year_match:

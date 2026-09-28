@@ -126,7 +126,10 @@ class AadhaarParser:
                     break
 
         father_prefix_pat = re.compile(
-            r"(?:^|\b)(?:Father|Mother|Husband|Wife|Spouse|Guardian|Care\s*of|Child\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Husband\s*of|পিতা|মাতা|স্বামী|স্ত্রী|पिता|माता|पति|पत्नी|C/O|S/O|D/O|W/O|H/O|C/0|S/0|D/0|W/0|H/0|W\s*/\s*[O0o]|C\s*/\s*[O0o]|S\s*/\s*[O0o]|D\s*/\s*[O0o])[\s:.)-]*",
+            r"(?:^|\b)(?:Father|Mother|Husband|Wife|Spouse|Guardian|Care\s*of|Child\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Husband\s*of"
+            r"|Faher|Fathr|Fathet|Frot|Ftot|Fter|Pita|Pati"
+            r"|পিতা|মাতা|স্বামী|স্ত্রী|पिता|माता|पति|पत्नी"
+            r"|C/O|S/O|D/O|W/O|H/O|C/0|S/0|D/0|W/0|H/0|W\s*/\s*[O0o]|C\s*/\s*[O0o]|S\s*/\s*[O0o]|D\s*/\s*[O0o])[\s:.)-]*",
             re.IGNORECASE
         )
 
@@ -139,7 +142,7 @@ class AadhaarParser:
                 if father_prefix_pat.search(line):
                     continue
                 cand_clean = re.sub(r"^[\d\s.,|:;~*\"'#/-]+", "", line).strip()
-                cand_clean = re.split(r"\b(?:Address|पता|D/O|S/O|W/O|C/O|W/0|C/0|S/0|D/0|Father|Mother|Husband|Wife|Spouse|Guardian|Care\s*of|Child\s*of|Son\s*of|Daughter\s*of|Wife\s*of|পিতা|মাতা|স্বামী|স্ত্রী|पिता|माता|पति|पत्नी)\b|[\"|~]", cand_clean)[0].strip()
+                cand_clean = re.split(r"\b(?:Address|पता|D/O|S/O|W/O|C/O|W/0|C/0|S/0|D/0|Father|Mother|Husband|Wife|Spouse|Guardian|Care\s*of|Child\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Faher|Fathr|Fathet|Frot|Ftot|Fter|Pita|Pati|পিতা|মাতা|স্বামী|স্ত্রী|पिता|माता|पति|पत्नी)\b|[\"|~]", cand_clean)[0].strip()
                 if is_valid_person_name(cand_clean):
                     words = [w for w in re.findall(r"[A-Za-z]+", cand_clean) if len(w) > 1 and w.upper() not in FORBIDDEN_NAME_WORDS]
                     if len(words) >= 1:

@@ -182,13 +182,21 @@ document.addEventListener("DOMContentLoaded", () => {
   async function startCamera() {
     try {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        cameraStream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: "environment",
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
-          }
-        });
+        try {
+          cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: "environment" },
+              width: { ideal: 1920, min: 1280 },
+              height: { ideal: 1080, min: 720 },
+              focusMode: { ideal: "continuous" }
+            }
+          });
+        } catch (strictErr) {
+          // Fallback to basic video stream if device does not support strict constraints
+          cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" }
+          });
+        }
         webcamVideo.srcObject = cameraStream;
       } else {
         showToast("Camera Error", "Webcam access is not supported by your browser.");
@@ -213,15 +221,61 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   shutterBtn.addEventListener("click", () => {
-    if (!webcamVideo.videoWidth) {
+    if (!webcamVideo.videoWidth || !webcamVideo.videoHeight) {
       showToast("Camera Not Ready", "Please wait for video stream to initialize.");
       return;
     }
 
-    snapshotCanvas.width = webcamVideo.videoWidth;
-    snapshotCanvas.height = webcamVideo.videoHeight;
+    const wrapper = document.querySelector(".camera-wrapper");
+    const guide = document.querySelector(".camera-frame-guide");
+    const vw = webcamVideo.videoWidth;
+    const vh = webcamVideo.videoHeight;
+
+    let sx = 0, sy = 0, sWidth = vw, sHeight = vh;
+
+    // Viewfinder-aligned cropping:
+    // Captures the exact area the user centered inside the dashed card guide on screen,
+    // eliminating background clutter (keyboard, desk, ceiling, hands) and maximizing text scale.
+    if (wrapper && guide) {
+      const wrapperRect = wrapper.getBoundingClientRect();
+      const guideRect = guide.getBoundingClientRect();
+
+      if (wrapperRect.width > 0 && wrapperRect.height > 0) {
+        const scale = Math.max(wrapperRect.width / vw, wrapperRect.height / vh);
+        const renderedW = vw * scale;
+        const renderedH = vh * scale;
+        const offsetX = (renderedW - wrapperRect.width) / 2;
+        const offsetY = (renderedH - wrapperRect.height) / 2;
+
+        const guideRelX = (guideRect.left - wrapperRect.left) + offsetX;
+        const guideRelY = (guideRect.top - wrapperRect.top) + offsetY;
+
+        let cropX = guideRelX / scale;
+        let cropY = guideRelY / scale;
+        let cropW = guideRect.width / scale;
+        let cropH = guideRect.height / scale;
+
+        // Add 8% safety padding so card borders and text are never clipped
+        const padX = cropW * 0.08;
+        const padY = cropH * 0.08;
+        cropX = Math.max(0, cropX - padX);
+        cropY = Math.max(0, cropY - padY);
+        cropW = Math.min(vw - cropX, cropW + (padX * 2));
+        cropH = Math.min(vh - cropY, cropH + (padY * 2));
+
+        if (cropW > 80 && cropH > 60) {
+          sx = Math.round(cropX);
+          sy = Math.round(cropY);
+          sWidth = Math.round(cropW);
+          sHeight = Math.round(cropH);
+        }
+      }
+    }
+
+    snapshotCanvas.width = sWidth;
+    snapshotCanvas.height = sHeight;
     const ctx = snapshotCanvas.getContext("2d");
-    ctx.drawImage(webcamVideo, 0, 0, snapshotCanvas.width, snapshotCanvas.height);
+    ctx.drawImage(webcamVideo, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
 
     const base64Data = snapshotCanvas.toDataURL("image/jpeg", 0.95);
     displayPreview(base64Data);

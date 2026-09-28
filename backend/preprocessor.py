@@ -182,76 +182,71 @@ class ImagePreprocessor:
         return rotated, median_angle
 
     @classmethod
+    def enhance_camera_image(cls, pil_img: Image.Image) -> Tuple[Image.Image, Dict[str, Any]]:
+        """
+        Specialized camera capture enhancement pipeline:
+        1. Rescales low-resolution webcams up to optimal neural text height (target width 1400-1800)
+        2. Applies CLAHE in LAB color space to cut through specular glare and lens shadows while preserving RGB text
+        3. Applies unsharp masking to recover edge crispness from soft focus or slight hand shake
+        """
+        img_np = np.array(pil_img)
+        if len(img_np.shape) == 2:
+            img_bgr = cv2.cvtColor(img_np, cv2.COLOR_GRAY2BGR)
+        elif img_np.shape[2] == 4:
+            img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGBA2BGR)
+        else:
+            img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+
+        h, w = img_bgr.shape[:2]
+        meta: Dict[str, Any] = {"original_w": w, "original_h": h, "camera_upscaled": False}
+
+        # Step 1: Detect and warp card if photographed on a background
+        warped_img, rectified = cls.detect_and_warp_card(img_bgr)
+        if rectified:
+            img_bgr = warped_img
+            h, w = img_bgr.shape[:2]
+            meta["card_rectified"] = True
+
+        # Step 2: Optimal resolution scaling (aim for width >= 1400px for sharp characters)
+        if w < 1400 or h < 850:
+            scale = max(1400 / w, 850 / h)
+            scale = min(scale, 2.5)
+            new_w = int(w * scale)
+            new_h = int(h * scale)
+            img_bgr = cv2.resize(img_bgr, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
+            meta["camera_upscaled"] = True
+            meta["scale_factor"] = round(scale, 2)
+
+        # Step 3: Color-preserving contrast enhancement (LAB color space)
+        lab = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2LAB)
+        l, a, b = cv2.split(lab)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        l_enh = clahe.apply(l)
+        enhanced_bgr = cv2.cvtColor(cv2.merge((l_enh, a, b)), cv2.COLOR_LAB2BGR)
+
+        # Step 4: Unsharp masking for camera soft-focus
+        gaussian = cv2.GaussianBlur(enhanced_bgr, (0, 0), sigmaX=2.0)
+        sharpened_bgr = cv2.addWeighted(enhanced_bgr, 1.4, gaussian, -0.4, 0)
+        sharpened_bgr = np.clip(sharpened_bgr, 0, 255).astype(np.uint8)
+
+        # Convert back to PIL Image (RGB)
+        pil_result = cls.to_pil(sharpened_bgr)
+        return pil_result, meta
+
+    @classmethod
     def enhance_for_ocr(cls, image_bytes: bytes) -> Tuple[Image.Image, Dict[str, Any]]:
         """
         Full robust image enhancement pipeline:
         1. Decodes image and rescales to standard OCR resolution if needed
         2. Detects perspective warp / crops card contour if visible
-        3. Converts to grayscale
-        4. Analyzes blurriness and applies selective de-blurring / unsharp masking
-        5. Performs deskewing to straighten text
-        6. Applies adaptive contrast enhancement (CLAHE) for illumination variance
+        3. Applies LAB color-space contrast enhancement (preserving text color definition)
+        4. Applies unsharp masking for character stroke definition
         """
         img = cls.load_image(image_bytes)
-        h, w = img.shape[:2]
-        meta: Dict[str, Any] = {
-            "original_width": w,
-            "original_height": h,
-            "card_rectified": False,
-            "deskew_angle": 0.0,
-            "blur_score": 0.0,
-            "sharpened": False
-        }
-
-        # Step 1: Detect and warp card if photographed on a background
-        warped_img, rectified = cls.detect_and_warp_card(img)
-        if rectified:
-            img = warped_img
-            h, w = img.shape[:2]
-            meta["card_rectified"] = True
-
-        # Step 2: Optimal resolution scaling (aim for width >= 1200px for sharp characters)
-        if w < 1200 or h < 750:
-            scale = max(1200 / w, 750 / h)
-            new_w = int(w * scale)
-            new_h = int(h * scale)
-            img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
-            meta["upscaled"] = True
-            meta["scale_factor"] = round(scale, 2)
-        else:
-            meta["upscaled"] = False
-
-        # Step 3: Grayscale conversion
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-        # Step 4: Blur detection & selective deblurring
-        blur_score = cls.estimate_blur(gray)
-        meta["blur_score"] = round(blur_score, 1)
-
-        # If image is blurry or soft, apply unsharp masking and edge crisping
-        if blur_score < 400:
-            gray = cls.sharpen_image(gray)
-            meta["sharpened"] = True
-
-        # Step 5: Deskew text lines
-        deskewed, angle = cls.deskew_image(gray)
-        meta["deskew_angle"] = round(angle, 2)
-
-        # Step 6: CLAHE Adaptive Contrast Equalization
-        clahe = cv2.createCLAHE(clipLimit=2.2, tileGridSize=(8, 8))
-        contrast_enhanced = clahe.apply(deskewed)
-
-        # Convert back to PIL Image
-        pil_result = cls.to_pil(contrast_enhanced)
-        return pil_result, meta
+        pil_img = cls.to_pil(img)
+        return cls.enhance_camera_image(pil_img)
 
     @classmethod
     def rotate_image(cls, pil_img: Image.Image, degrees: int) -> Image.Image:
-        """Rotates PIL Image by 90, 180, or 270 degrees."""
-        if degrees == 90:
-            return pil_img.transpose(Image.ROTATE_270)
-        elif degrees == 180:
-            return pil_img.transpose(Image.ROTATE_180)
-        elif degrees == 270:
-            return pil_img.transpose(Image.ROTATE_90)
-        return pil_img
+        """Rotates PIL Image by 90, 180, or 270 degrees expanding canvas."""
+        return pil_img.rotate(degrees, expand=True)
