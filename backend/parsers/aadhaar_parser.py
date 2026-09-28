@@ -24,25 +24,41 @@ class AadhaarParser:
     @classmethod
     def extract_dob_and_age(cls, raw_text: str, lines: List[str]) -> Tuple[str, Dict[str, Any], float]:
         """Extracts standard DD/MM/YYYY date of birth and calculates age."""
-        dob_patterns = [
-            # 1. Standard DOB prefixes with full date
-            r"(?:DOB|D\.?O\.?B|Date\s*of\s*Birth|जन्म\s*तिथि|जन्म\s*तारीख)[\s:/.-]*([0-9]{1,2}[/.-][0-9]{1,2}[/.-][0-9]{4})",
-            # 2. Year of Birth prefixes (New PVC & elderly citizen cards)
-            r"(?:Year\s*of\s*Birth|जन्म\s*वर्ष|YOB|Birth)[^0-9\n]*([1-2][0-9]{3})",
-            # 3. YYYY-MM-DD format
-            r"\b(19\d{2}|20[0-2]\d)[/.-](0?[1-9]|1[0-2])[/.-](0?[1-9]|[12]\d|3[01])\b",
-            # 4. Standalone DD/MM/YYYY
-            r"\b([0-3]?[0-9][/.-][0-1]?[0-9][/.-][1-2][0-9]{3})\b"
-        ]
+        # 1. Standard DOB prefixes with full date (Highest priority)
+        pat_explicit = r"(?:DOB|D\.?O\.?B|Date\s*of\s*Birth|जन्म\s*तिथि|जन्म\s*तारीख)[\s:/.-]*([0-9]{1,2}[/.-][0-9]{1,2}[/.-][0-9]{4})"
+        m = re.search(pat_explicit, raw_text, re.IGNORECASE)
+        if m:
+            normalized = normalize_date_string(m.group(1))
+            if normalized:
+                return normalized, calculate_age(normalized), 0.96
 
-        for pat in dob_patterns:
-            m = re.search(pat, raw_text, re.IGNORECASE)
-            if m:
-                raw_dob = m.group(1)
-                normalized = normalize_date_string(raw_dob)
-                if normalized:
-                    age_dict = calculate_age(normalized)
-                    return normalized, age_dict, 0.95
+        # 2. Year of Birth prefixes (New PVC & elderly citizen cards)
+        pat_yob = r"(?:Year\s*of\s*Birth|जन्म\s*वर्ष|YOB)[\s:/.-]*([1-2][0-9]{3})"
+        m = re.search(pat_yob, raw_text, re.IGNORECASE)
+        if m:
+            normalized = normalize_date_string(m.group(1))
+            if normalized:
+                return normalized, calculate_age(normalized), 0.95
+
+        # For standalone date search, clean out Issue Date, Download Date, and Enrolment dates
+        clean_for_date = re.sub(
+            r"(?:Issue\s*[A-Za-z]*|Download\s*[A-Za-z]*|Enrolment\s*[A-Za-z]*|Details\s*as\s*on)[\s:.-]*\d{1,2}[/.-]\d{1,2}[/.-]\d{4}",
+            "", raw_text, flags=re.IGNORECASE
+        )
+
+        # 3. YYYY-MM-DD format
+        m = re.search(r"\b(19\d{2}|20[0-2]\d)[/.-](0?[1-9]|1[0-2])[/.-](0?[1-9]|[12]\d|3[01])\b", clean_for_date)
+        if m:
+            normalized = normalize_date_string(m.group(0))
+            if normalized:
+                return normalized, calculate_age(normalized), 0.90
+
+        # 4. Standalone DD/MM/YYYY
+        m = re.search(r"\b([0-3]?[0-9][/.-][0-1]?[0-9][/.-][1-2][0-9]{3})\b", clean_for_date)
+        if m:
+            normalized = normalize_date_string(m.group(1))
+            if normalized:
+                return normalized, calculate_age(normalized), 0.90
 
         return "", {}, 0.0
 
@@ -81,17 +97,32 @@ class AadhaarParser:
                             if len(words) >= 2:
                                 return " ".join(words).title(), 0.96
 
-        # Strategy 2: Real DOB line (must contain an actual date or 4-digit year, NOT disclaimer)
+        # Strategy 2: Real DOB line (prioritize explicit DOB prefix over Issue / Download date)
         dob_line_idx = -1
+        # Pass 2a: Explicit DOB / Birth prefix line
         for idx, line in enumerate(cleaned_lines):
             if is_instruction_noise(line):
                 continue
-            # Avoid matching disclaimer: "date of birth (DOB). DOB is based on..."
             if "PROOF OF DOB" in line.upper() or "DATE OF BIRTH (DOB)" in line.upper() or "NOT OF CITIZENSHIP" in line.upper():
                 continue
-            if re.search(r"\b([0-3]?[0-9][/.-][0-1]?[0-9][/.-][1-2][0-9]{3})\b", line) or re.search(r"(?:DOB|Birth|जन्म)[\s:/.-]*([0-9]{1,2}[/.-][0-9]{1,2}[/.-][0-9]{4})", line, re.IGNORECASE):
+            if "ISSUED" in line.upper() or "ISSUE DATE" in line.upper() or "DOWNLOAD DATE" in line.upper():
+                continue
+            if re.search(r"(?:DOB|Birth|जन्म|Year of Birth)[\s:/.-]*([0-9]{1,2}[/.-][0-9]{1,2}[/.-][0-9]{4}|[1-2][0-9]{3})", line, re.IGNORECASE):
                 dob_line_idx = idx
                 break
+
+        # Pass 2b: Standalone date if no explicit prefix found
+        if dob_line_idx == -1:
+            for idx, line in enumerate(cleaned_lines):
+                if is_instruction_noise(line):
+                    continue
+                if "PROOF OF DOB" in line.upper() or "DATE OF BIRTH (DOB)" in line.upper() or "NOT OF CITIZENSHIP" in line.upper():
+                    continue
+                if "ISSUED" in line.upper() or "ISSUE DATE" in line.upper() or "DOWNLOAD DATE" in line.upper():
+                    continue
+                if re.search(r"\b([0-3]?[0-9][/.-][0-1]?[0-9][/.-][1-2][0-9]{3})\b", line):
+                    dob_line_idx = idx
+                    break
 
         if dob_line_idx > 0:
             for i in range(dob_line_idx - 1, max(-1, dob_line_idx - 4), -1):

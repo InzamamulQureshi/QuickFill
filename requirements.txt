@@ -4,6 +4,8 @@ python-multipart>=0.0.9
 pillow>=10.0.0
 opencv-python-headless>=4.8.0
 pytesseract>=0.3.10
+rapidocr-onnxruntime>=1.2.3
+onnxruntime>=1.17.0
 winocr>=0.0.15; sys_platform == 'win32'
 pypdf>=5.0.0
 pypdfium2>=4.30.0

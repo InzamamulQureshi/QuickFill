@@ -4,6 +4,7 @@ Provides RESTful endpoints for ID document text extraction, document classificat
 real-time age calculation, and static web UI serving.
 """
 import io
+import re
 import os
 import base64
 import time
@@ -160,10 +161,15 @@ async def extract_from_upload(
             ocr_lines = []
             engine_used = "Digital PDF Parser"
 
-            # Check if digital vector text is already rich (e.g. direct e-Aadhaar download from UIDAI)
+            # Check if digital vector text is already rich (e.g. direct e-Aadhaar or e-PAN download)
             has_rich_digital_text = (
-                len(digital_text.strip()) > 80 and
-                any(kw in digital_text.upper() for kw in ["AADHAAR", "DOB", "YEAR OF BIRTH", "GOVERNMENT", "INDIA", "MALE", "FEMALE"])
+                len(digital_text.strip()) > 25 and
+                (
+                    bool(re.search(r"[A-Z]{5}[0-9]{4}[A-Z]", digital_text)) or
+                    bool(re.search(r"[2-9]\d{3}\s?\d{4}\s?\d{4}", digital_text)) or
+                    bool(re.search(r"\d{2}[/.-]\d{2}[/.-]\d{4}", digital_text)) or
+                    any(kw in digital_text.upper() for kw in ["AADHAAR", "PAN", "INCOME TAX", "ACCOUNT NUMBER", "DOB", "YEAR OF BIRTH", "GOVERNMENT", "INDIA", "MALE", "FEMALE"])
+                )
             )
 
             # Only run computer vision OCR if digital vector text is missing or sparse (scanned PDF)

@@ -4,8 +4,9 @@ FROM python:3.11-slim
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 
-# Install system dependencies: Tesseract OCR engine, English + Hindi models, and image processing libraries
+# Install system dependencies: OpenMP for ONNX Runtime, Tesseract OCR fallback, and image processing libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgomp1 \
     tesseract-ocr \
     tesseract-ocr-eng \
     tesseract-ocr-hin \
