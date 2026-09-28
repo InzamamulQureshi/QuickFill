@@ -111,10 +111,11 @@ INSTRUCTION_TERMS = [
 
 
 def clean_line(text: str) -> str:
-    """Removes stray symbols and trims whitespace."""
+    """Removes stray symbols, normalizes unicode punctuation, and trims whitespace."""
     if not text:
         return ""
-    # Strip symbols at boundaries but keep alphanumeric, dots, hyphens, and slashes
+    # Normalize unicode fullwidth punctuation to standard ASCII equivalents
+    text = text.replace("，", ",").replace("：", ":").replace("；", ";").replace("（", "(").replace("）", ")").replace("—", "-")
     cleaned = re.sub(r"^[^a-zA-Z0-9]+|[^a-zA-Z0-9)]+$", "", text.strip())
     cleaned = re.sub(r"\s+", " ", cleaned)
     return cleaned
