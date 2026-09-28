@@ -18,6 +18,38 @@ INDIAN_STATES = [
 # Regex for Indian Postal Index Number (PIN Code) - 6 digits
 PINCODE_REGEX = re.compile(r"\b([1-9][0-9]{2}\s?[0-9]{3})\b")
 
+# Pincode 2-digit prefix to state mapping for resilient state recovery
+PINCODE_PREFIX_MAP = {
+    "11": "Delhi",
+    "12": "Haryana", "13": "Haryana",
+    "14": "Punjab", "15": "Punjab", "16": "Punjab",
+    "17": "Himachal Pradesh",
+    "18": "Jammu and Kashmir", "19": "Jammu and Kashmir",
+    "20": "Uttar Pradesh", "21": "Uttar Pradesh", "22": "Uttar Pradesh",
+    "23": "Uttar Pradesh", "24": "Uttar Pradesh", "25": "Uttar Pradesh",
+    "26": "Uttarakhand", "27": "Uttar Pradesh", "28": "Uttar Pradesh",
+    "30": "Rajasthan", "31": "Rajasthan", "32": "Rajasthan", "33": "Rajasthan", "34": "Rajasthan",
+    "36": "Gujarat", "37": "Gujarat", "38": "Gujarat", "39": "Gujarat",
+    "40": "Maharashtra", "41": "Maharashtra", "42": "Maharashtra", "43": "Maharashtra", "44": "Maharashtra",
+    "45": "Madhya Pradesh", "46": "Madhya Pradesh", "47": "Madhya Pradesh", "48": "Madhya Pradesh",
+    "49": "Chhattisgarh",
+    "50": "Telangana", "51": "Andhra Pradesh", "52": "Andhra Pradesh", "53": "Andhra Pradesh",
+    "56": "Karnataka", "57": "Karnataka", "58": "Karnataka", "59": "Karnataka",
+    "60": "Tamil Nadu", "61": "Tamil Nadu", "62": "Tamil Nadu", "63": "Tamil Nadu", "64": "Tamil Nadu",
+    "67": "Kerala", "68": "Kerala", "69": "Kerala",
+    "70": "West Bengal", "71": "West Bengal", "72": "West Bengal", "73": "West Bengal", "74": "West Bengal",
+    "75": "Odisha", "76": "Odisha", "77": "Odisha",
+    "78": "Assam", "79": "Assam",
+    "80": "Bihar", "81": "Bihar", "82": "Bihar", "83": "Jharkhand", "84": "Bihar", "85": "Bihar"
+}
+
+def get_state_from_pincode(pincode: str) -> str:
+    """Infers Indian state from the 6-digit postal index number prefix."""
+    if not pincode or len(pincode.strip()) < 2:
+        return ""
+    clean_p = re.sub(r"\D", "", pincode)
+    return PINCODE_PREFIX_MAP.get(clean_p[:2], "")
+
 # Regex for Aadhaar number - standard 12 digits
 AADHAAR_REGEX = re.compile(r"\b([2-9][0-9]{3}\s?[0-9]{4}\s?[0-9]{4})\b")
 
@@ -53,7 +85,10 @@ FORBIDDEN_NAME_WORDS = {
     "SUB", "PO", "VID", "VIB", "VIRTUAL", "CARD", "AUTHORITY", "UNIQUE", "IDENTIFICATION",
     "IDENTITY", "CITIZENSHIP", "PROOF", "BENEFIT", "BENEFITS", "SERVICE", "SERVICES",
     "COMMUNICATION", "OFFLINE", "ONLINE", "AUTHENTICATION", "REPUBLIC", "DEPARTMENT",
-    "DOCUMENTS", "SUPPORT", "UPDATED", "ENTITIES", "SEEKING", "CONSENT"
+    "DOCUMENTS", "SUPPORT", "UPDATED", "ENTITIES", "SEEKING", "CONSENT",
+    "WEST", "EAST", "NORTH", "SOUTH", "CHAWL", "COMPOUND", "URBAN", "RURAL",
+    "COLONY", "SECTOR", "BLOCK", "LANE", "GALI", "MOHALLA", "TALUKA", "TEHSIL",
+    "GOV", "GOVIN", "GOVAM", "UIDAI", "EMAIL", "WWW", "HELP"
 }
 
 # UIDAI e-Aadhaar informational boilerplate bullet points
@@ -67,7 +102,10 @@ INSTRUCTION_TERMS = [
     "AADHAAR IS PROOF", "NOT FOR TRAVEL", "BAAL AADHAAR",
     "BE USED WITH VERIFICATION", "SCANNING OF QR CODE", "HELP@UIDAI",
     "REGULATIONS", "SUBMITTED BY", "NUMBER HOLDER", "AADHAAR NUMBER HOLDER",
-    "YEARS FROM DATE OF ENROLMENT", "ENTITIES SEEKING AADHAAR"
+    "YEARS FROM DATE OF ENROLMENT", "ENTITIES SEEKING AADHAAR",
+    "ओळखीचा पुरावा", "नागरिकत्व किंवा", "जन्मतारखेचा नाही", "पडताळणीसाठी",
+    "माझे आधार", "माझी ओळख", "VALID THROUGHOUT THE COUNTRY", "CARRY AADHAAR",
+    "ELECTRONICALLY GENERATED", "OFFLINE XML", "SECURE QR CODE"
 ]
 
 
@@ -140,8 +178,8 @@ def is_valid_person_name(cand: str) -> bool:
             return False
     if is_header_noise(cand) or is_instruction_noise(cand):
         return False
-    # Person name should be 1 to 4 words
-    if not (1 <= len(words) <= 4):
+    # Person name should be 1 to 6 words
+    if not (1 <= len(words) <= 6):
         return False
     # If single word, must be at least 4 letters (e.g. 'Amit', not 'Wm' or 'Vib')
     if len(words) == 1 and len(words[0]) < 4:
@@ -174,14 +212,17 @@ def format_aadhaar_number(raw_num: str) -> str:
 def extract_aadhaar_number(text: str) -> Optional[str]:
     """
     Extracts an Aadhaar number from text supporting standard, masked, and contiguous formats.
-    Avoids accidentally capturing 16-digit Virtual IDs (VID).
+    Avoids accidentally capturing 16-digit Virtual IDs (VID) or helpline 1947.
     """
     if not text:
         return None
 
-    # Strip any 16-digit Virtual ID (VID) lines first so they are not misread as a 12-digit Aadhaar
-    clean_text = re.sub(r"\bVID\s*[:\s]*\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\b", "", text, flags=re.IGNORECASE)
-    clean_text = re.sub(r"\b\d{4}\s\d{4}\s\d{4}\s\d{4}\b", "", clean_text)
+    # Strip UIDAI helpline 1947 first so it doesn't glue to a 12-digit Aadhaar to form 16 digits
+    clean_text = re.sub(r"[@#]?\b1947\b", "", text)
+
+    # Strip any 16-digit Virtual ID (VID) lines (VIDs start with 9 or have explicit VID: prefix)
+    clean_text = re.sub(r"\bVID\s*[:\s]*\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\b", "", clean_text, flags=re.IGNORECASE)
+    clean_text = re.sub(r"\b9\d{3}\s\d{4}\s\d{4}\s\d{4}\b", "", clean_text)
 
     # 1. Standard 12 digits: 2345 6789 0123
     std_m = re.search(r"\b([2-9]\d{3}\s\d{4}\s\d{4})\b", clean_text)

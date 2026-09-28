@@ -99,6 +99,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const pdfPasswordError = document.getElementById("pdfPasswordError");
   let pendingPdfFile = null;
 
+  // Merge Confirmation Modal Elements
+  const mergeConfirmModal = document.getElementById("mergeConfirmModal");
+  const closeMergeModalBtn = document.getElementById("closeMergeModalBtn");
+  const btnMergeDetails = document.getElementById("btnMergeDetails");
+  const btnReplaceDetails = document.getElementById("btnReplaceDetails");
+  const btnCancelMerge = document.getElementById("btnCancelMerge");
+  const mergeNewDocBadge = document.getElementById("mergeNewDocBadge");
+  const mergePreviewContainer = document.getElementById("mergePreviewContainer");
+  let pendingExtractionResponse = null;
+
   // Sample card buttons
   const samplePills = document.querySelectorAll(".sample-pill");
 
@@ -418,8 +428,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* --------------------------------------------------------------------------
-     6. Intelligent Form Population & Smart Merging
+     6. Intelligent Form Population & User-Prompted Merging
      -------------------------------------------------------------------------- */
+  function hasExistingFormData() {
+    return !!(
+      inputName.value.trim() ||
+      inputDob.value.trim() ||
+      inputFatherSpouse.value.trim() ||
+      inputAddress.value.trim() ||
+      inputIdNumber.value.trim() ||
+      inputGender.value.trim()
+    );
+  }
+
   function handleExtractionSuccess(response) {
     const data = response.data;
     const meta = response.ocr_meta || {};
@@ -433,83 +454,297 @@ document.addEventListener("DOMContentLoaded", () => {
     detectedDocBadge.textContent = docType;
     ocrTimeMeta.textContent = `Speed: ${meta.processing_time_ms || 0} ms`;
     ocrLinesMeta.textContent = `Lines: ${meta.lines_count || 0}`;
-
     rawTextInspector.textContent = meta.raw_text || "(No text detected)";
 
-    if (!formState.documentsScanned.includes(docType)) {
-      formState.documentsScanned.push(docType);
+    // If form is empty, directly populate without prompting
+    if (!hasExistingFormData()) {
+      applyExtractedData(response, "replace");
+      return;
     }
 
-    // Name
-    if (data.name) {
-      inputName.value = data.name;
-      formState.fullName = data.name;
-      setFieldPopulated(inputName, badgeName, `From ${docType}`);
+    // Form already has details -> PROMPT USER whether to merge or replace!
+    pendingExtractionResponse = response;
+    showMergeConfirmModal(response);
+  }
+
+  function showMergeConfirmModal(response) {
+    if (!mergeConfirmModal) return;
+    const data = response.data;
+    const docType = response.detected_type || data.card_type || "New Document";
+
+    if (mergeNewDocBadge) {
+      mergeNewDocBadge.textContent = docType;
     }
 
-    // DOB & Age
-    if (data.dob) {
-      inputDob.value = data.dob;
-      formState.dateOfBirth = data.dob;
-      setFieldPopulated(inputDob, badgeDob, `From ${docType}`);
+    const fields = [
+      { label: "Full Name", current: inputName.value.trim(), incoming: data.name },
+      { label: "Date of Birth", current: inputDob.value.trim(), incoming: data.dob },
+      { label: "Father / Spouse", current: inputFatherSpouse.value.trim(), incoming: data.father_spouse_name },
+      { label: "Residential Address", current: inputAddress.value.trim(), incoming: data.address },
+      { label: "Document ID", current: inputIdNumber.value.trim(), incoming: data.aadhaar_number || data.pan_number },
+      { label: "Gender", current: inputGender.value.trim(), incoming: data.gender }
+    ];
 
-      if (data.age && data.age.formatted) {
-        inputAge.value = data.age.formatted;
-        formState.calculatedAge = data.age.formatted;
-        inputAge.classList.add("field-populated");
+    if (mergePreviewContainer) {
+      mergePreviewContainer.innerHTML = "";
+      let hasAnyChange = false;
+
+      fields.forEach(f => {
+        if (!f.incoming && !f.current) return;
+        hasAnyChange = true;
+
+        const row = document.createElement("div");
+        row.className = "merge-diff-row";
+
+        if (!f.current && f.incoming) {
+          row.classList.add("is-new");
+          row.innerHTML = `
+            <span class="merge-diff-label">${f.label} <span style="color:#2ea043;">(New)</span></span>
+            <div class="merge-diff-values">
+              <span class="merge-val-new">${escapeHtml(f.incoming)}</span>
+            </div>
+          `;
+        } else if (f.current && f.incoming && f.current !== f.incoming) {
+          row.classList.add("is-diff");
+          row.innerHTML = `
+            <span class="merge-diff-label">${f.label} <span style="color:var(--accent);">(Different)</span></span>
+            <div class="merge-diff-values">
+              <span class="merge-val-old">${escapeHtml(f.current)}</span>
+              <span class="merge-arrow">➔</span>
+              <span class="merge-val-new">${escapeHtml(f.incoming)}</span>
+            </div>
+          `;
+        } else if (f.current && !f.incoming) {
+          row.innerHTML = `
+            <span class="merge-diff-label">${f.label}</span>
+            <div class="merge-diff-values">
+              <span class="merge-val-new" style="color:var(--text-secondary);">${escapeHtml(f.current)}</span>
+            </div>
+          `;
+        } else {
+          row.innerHTML = `
+            <span class="merge-diff-label">${f.label}</span>
+            <div class="merge-diff-values">
+              <span class="merge-val-new">${escapeHtml(f.current)}</span>
+            </div>
+          `;
+        }
+        mergePreviewContainer.appendChild(row);
+      });
+
+      if (!hasAnyChange) {
+        mergePreviewContainer.innerHTML = `<p style="font-size:12px; color:var(--text-muted); margin:0;">No new details found in this scan.</p>`;
       }
     }
 
-    // Father / Spouse
-    if (data.father_spouse_name) {
-      inputFatherSpouse.value = data.father_spouse_name;
-      formState.fatherSpouseName = data.father_spouse_name;
-      setFieldPopulated(inputFatherSpouse, badgeFatherSpouse, `From ${docType}`);
+    mergeConfirmModal.style.display = "flex";
+  }
+
+  function closeMergeConfirmModal() {
+    if (mergeConfirmModal) {
+      mergeConfirmModal.style.display = "none";
     }
+    pendingExtractionResponse = null;
+  }
 
-    // Address
-    if (data.address) {
-      inputAddress.value = data.address;
-      formState.fullAddress = data.address;
-      setFieldPopulated(inputAddress, badgeAddress, `From ${docType}`);
+  function applyExtractedData(response, mode = "replace") {
+    const data = response.data;
+    const docType = response.detected_type || data.card_type || "Detected ID";
 
-      if (data.state) {
+    if (mode === "replace") {
+      formState.documentsScanned = [docType];
+
+      // Name
+      inputName.value = data.name || "";
+      formState.fullName = data.name || "";
+      if (data.name) setFieldPopulated(inputName, badgeName, `From ${docType}`);
+      else { badgeName.textContent = "Manual"; badgeName.classList.remove("auto-filled"); inputName.classList.remove("field-populated"); }
+
+      // DOB & Age
+      inputDob.value = data.dob || "";
+      formState.dateOfBirth = data.dob || "";
+      if (data.dob) {
+        setFieldPopulated(inputDob, badgeDob, `From ${docType}`);
+        if (data.age && data.age.formatted) {
+          inputAge.value = data.age.formatted;
+          formState.calculatedAge = data.age.formatted;
+          inputAge.classList.add("field-populated");
+        } else {
+          inputAge.value = "";
+          inputAge.classList.remove("field-populated");
+        }
+      } else {
+        badgeDob.textContent = "Manual";
+        badgeDob.classList.remove("auto-filled");
+        inputDob.classList.remove("field-populated");
+        inputAge.value = "";
+        inputAge.classList.remove("field-populated");
+      }
+
+      // Father / Spouse
+      inputFatherSpouse.value = data.father_spouse_name || "";
+      formState.fatherSpouseName = data.father_spouse_name || "";
+      if (data.father_spouse_name) setFieldPopulated(inputFatherSpouse, badgeFatherSpouse, `From ${docType}`);
+      else { badgeFatherSpouse.textContent = "From ID"; badgeFatherSpouse.classList.remove("auto-filled"); inputFatherSpouse.classList.remove("field-populated"); }
+
+      // Address, State, Pincode
+      inputAddress.value = data.address || "";
+      formState.fullAddress = data.address || "";
+      if (data.address) {
+        setFieldPopulated(inputAddress, badgeAddress, `From ${docType}`);
+        if (data.state) {
+          chipState.textContent = `State: ${data.state}`;
+          chipState.style.display = "inline-block";
+          formState.state = data.state;
+        } else {
+          chipState.style.display = "none";
+        }
+        if (data.pincode) {
+          chipPincode.textContent = `PIN: ${data.pincode}`;
+          chipPincode.style.display = "inline-block";
+          formState.pincode = data.pincode;
+        } else {
+          chipPincode.style.display = "none";
+        }
+      } else {
+        badgeAddress.textContent = "Manual";
+        badgeAddress.classList.remove("auto-filled");
+        inputAddress.classList.remove("field-populated");
+        chipState.style.display = "none";
+        chipPincode.style.display = "none";
+      }
+
+      // ID Number
+      const idVal = data.aadhaar_number || data.pan_number || "";
+      inputIdNumber.value = idVal;
+      formState.idNumber = idVal;
+      if (idVal) inputIdNumber.classList.add("field-populated");
+      else inputIdNumber.classList.remove("field-populated");
+
+      // Gender
+      inputGender.value = data.gender || "";
+      formState.gender = data.gender || "";
+      if (data.gender) inputGender.classList.add("field-populated");
+      else inputGender.classList.remove("field-populated");
+
+      mergeStatusIndicator.textContent = docType;
+      mergeStatusIndicator.style.display = "inline-block";
+      showToast("Form Populated", `Filled fields from ${docType}.`);
+
+    } else if (mode === "merge") {
+      if (!formState.documentsScanned.includes(docType)) {
+        formState.documentsScanned.push(docType);
+      }
+
+      if (!inputName.value.trim() && data.name) {
+        inputName.value = data.name;
+        formState.fullName = data.name;
+        setFieldPopulated(inputName, badgeName, `From ${docType}`);
+      }
+
+      if (!inputDob.value.trim() && data.dob) {
+        inputDob.value = data.dob;
+        formState.dateOfBirth = data.dob;
+        setFieldPopulated(inputDob, badgeDob, `From ${docType}`);
+        if (data.age && data.age.formatted) {
+          inputAge.value = data.age.formatted;
+          formState.calculatedAge = data.age.formatted;
+          inputAge.classList.add("field-populated");
+        }
+      }
+
+      if (!inputFatherSpouse.value.trim() && data.father_spouse_name) {
+        inputFatherSpouse.value = data.father_spouse_name;
+        formState.fatherSpouseName = data.father_spouse_name;
+        setFieldPopulated(inputFatherSpouse, badgeFatherSpouse, `From ${docType}`);
+      }
+
+      if (!inputAddress.value.trim() && data.address) {
+        inputAddress.value = data.address;
+        formState.fullAddress = data.address;
+        setFieldPopulated(inputAddress, badgeAddress, `From ${docType}`);
+        if (data.state) {
+          chipState.textContent = `State: ${data.state}`;
+          chipState.style.display = "inline-block";
+          formState.state = data.state;
+        }
+        if (data.pincode) {
+          chipPincode.textContent = `PIN: ${data.pincode}`;
+          chipPincode.style.display = "inline-block";
+          formState.pincode = data.pincode;
+        }
+      } else if (data.address && chipState.style.display === "none" && data.state) {
         chipState.textContent = `State: ${data.state}`;
         chipState.style.display = "inline-block";
         formState.state = data.state;
       }
-      if (data.pincode) {
-        chipPincode.textContent = `PIN: ${data.pincode}`;
-        chipPincode.style.display = "inline-block";
-        formState.pincode = data.pincode;
+
+      const idVal = data.aadhaar_number || data.pan_number;
+      if (!inputIdNumber.value.trim() && idVal) {
+        inputIdNumber.value = idVal;
+        formState.idNumber = idVal;
+        inputIdNumber.classList.add("field-populated");
       }
-    }
 
-    // ID Number
-    const idVal = data.aadhaar_number || data.pan_number;
-    if (idVal) {
-      inputIdNumber.value = idVal;
-      formState.idNumber = idVal;
-      inputIdNumber.classList.add("field-populated");
-    }
+      if (!inputGender.value.trim() && data.gender) {
+        inputGender.value = data.gender;
+        formState.gender = data.gender;
+        inputGender.classList.add("field-populated");
+      }
 
-    // Gender
-    if (data.gender) {
-      inputGender.value = data.gender;
-      formState.gender = data.gender;
-      inputGender.classList.add("field-populated");
-    }
-
-    // Smart Merge & e-Aadhaar notification
-    if (docType.includes("e-Aadhaar") || docType.includes("Full Card")) {
-      mergeStatusIndicator.textContent = "e-Aadhaar (Full KYC)";
-      showToast("e-Aadhaar Processed", "All demographic details and address filled in one scan.");
-    } else if (formState.documentsScanned.length > 1) {
       mergeStatusIndicator.textContent = `Merged (${formState.documentsScanned.join(" + ")})`;
-      showToast("Smart Merged", `Merged details from ${docType}.`);
-    } else {
-      showToast("Extracted", `Populated form from ${docType}.`);
+      mergeStatusIndicator.style.display = "inline-block";
+      showToast("Details Merged", `Merged details from ${docType}.`);
     }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  if (btnMergeDetails) {
+    btnMergeDetails.addEventListener("click", () => {
+      if (pendingExtractionResponse) {
+        applyExtractedData(pendingExtractionResponse, "merge");
+      }
+      closeMergeConfirmModal();
+    });
+  }
+
+  if (btnReplaceDetails) {
+    btnReplaceDetails.addEventListener("click", () => {
+      if (pendingExtractionResponse) {
+        applyExtractedData(pendingExtractionResponse, "replace");
+      }
+      closeMergeConfirmModal();
+    });
+  }
+
+  if (btnCancelMerge) {
+    btnCancelMerge.addEventListener("click", () => {
+      closeMergeConfirmModal();
+      showToast("Kept Current", "Current form details were not changed.");
+    });
+  }
+
+  if (closeMergeModalBtn) {
+    closeMergeModalBtn.addEventListener("click", () => {
+      closeMergeConfirmModal();
+    });
+  }
+
+  if (mergeConfirmModal) {
+    mergeConfirmModal.addEventListener("click", (e) => {
+      if (e.target === mergeConfirmModal) {
+        closeMergeConfirmModal();
+      }
+    });
   }
 
   function setFieldPopulated(inputEl, badgeEl, badgeText) {

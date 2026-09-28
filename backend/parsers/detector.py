@@ -28,12 +28,23 @@ class DocumentDetector:
         text_upper = raw_text.upper()
 
         # 1. Check for PAN Card indicators
+        has_pan_number = bool(PAN_REGEX.search(raw_text))
+        has_uidai_authority = any(h in text_upper for h in [
+            "UNIQUE IDENTIFICATION", "AUTHORITY OF INDIA", "MERA AADHAAR", "UIDAI",
+            "ENROLMENT NO", "विशिष्ट पहचान", "नोंदणी क्रमांक", "माझे आधार"
+        ])
+
+        # If a valid PAN number is present and document does NOT have UIDAI authority headers:
+        # It is definitively a PAN Card (e-PAN PDFs often include applicant's linked Aadhaar)
+        if has_pan_number and not has_uidai_authority:
+            return "pan_card"
+
         pan_indicators = [
             "INCOME TAX", "PERMANENT ACCOUNT", "INCOMETAX",
             "GOVT. OF INDIA", "FATHER'S NAME"
         ]
         pan_score = sum(1 for ind in pan_indicators if ind in text_upper)
-        if PAN_REGEX.search(raw_text):
+        if has_pan_number:
             pan_score += 4
 
         # 2. Check for Aadhaar Front indicators
@@ -73,12 +84,16 @@ class DocumentDetector:
         if has_dob_or_gender and has_address_or_pin:
             return "aadhaar_combined"
 
-        if front_score >= 3 and back_score >= 3:
+        if has_dob_or_gender and front_score >= 3 and back_score >= 3:
             return "aadhaar_combined"
 
         # 5. Front vs Back winner
         if back_score > front_score and back_score >= 2:
             return "aadhaar_back"
+        elif back_score >= 2 and not has_dob_or_gender:
+            return "aadhaar_back"
+        elif front_score >= 2 and has_dob_or_gender:
+            return "aadhaar_front"
         elif front_score >= 2:
             return "aadhaar_front"
 

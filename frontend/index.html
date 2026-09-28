@@ -168,7 +168,7 @@
     <section class="panel form-panel">
       <div class="panel-header">
         <h2 class="panel-heading">Applicant Form</h2>
-        <span class="status-pill" id="mergeStatusIndicator">Auto-Merge Ready</span>
+        <span class="status-pill" id="mergeStatusIndicator" style="display: none;"></span>
       </div>
 
       <form id="quickFillForm" class="clean-form" autocomplete="off" onsubmit="return false;">
@@ -307,6 +307,44 @@
             <button type="button" class="btn btn-ghost" id="cancelPdfPasswordBtn">Cancel</button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Merge Confirmation Modal -->
+  <div class="modal-overlay" id="mergeConfirmModal" style="display: none;">
+    <div class="modal-window modal-merge">
+      <div class="modal-header">
+        <div class="modal-title-with-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="modal-merge-icon">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+          </svg>
+          <h3>Merge Document Details?</h3>
+        </div>
+        <button type="button" class="btn-icon" id="closeMergeModalBtn" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="modal-content">
+        <div class="merge-info-banner">
+          <p>The form already contains applicant data. A new document (<strong id="mergeNewDocBadge">Document</strong>) was scanned.</p>
+        </div>
+        <p class="merge-prompt-question">Would you like to merge the new details into your existing form, or replace all fields?</p>
+
+        <div class="merge-preview-container" id="mergePreviewContainer">
+          <!-- Dynamically populated field comparison -->
+        </div>
+
+        <div class="modal-form-actions modal-merge-actions">
+          <button type="button" class="btn btn-primary" id="btnMergeDetails">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Merge Details
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnReplaceDetails">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+            Replace All Fields
+          </button>
+          <button type="button" class="btn btn-ghost" id="btnCancelMerge">Keep Current Form</button>
+        </div>
       </div>
     </div>
   </div>

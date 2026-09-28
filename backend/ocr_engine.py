@@ -103,7 +103,9 @@ class OCREngineManager:
                 if text:
                     lines.append(text)
 
-        if not lines and raw_text:
+        if lines:
+            raw_text = "\n".join(lines)
+        elif raw_text:
             lines = [l.strip() for l in raw_text.splitlines() if l.strip()]
 
         return {

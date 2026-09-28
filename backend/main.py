@@ -185,9 +185,10 @@ async def extract_from_upload(
                 if cleaned:
                     all_lines.append(cleaned)
 
-            combined_text = digital_text if has_rich_digital_text else (ocr_text or digital_text)
-            if not combined_text.strip():
+            if all_lines:
                 combined_text = "\n".join(all_lines)
+            else:
+                combined_text = digital_text if has_rich_digital_text else (ocr_text or digital_text)
 
             parsed_data = DocumentDetector.parse_document(
                 raw_text=combined_text,

@@ -992,6 +992,113 @@ textarea {
   margin-top: 18px;
 }
 
+/* Merge Confirmation Modal */
+.modal-merge {
+  max-width: 520px;
+}
+
+.modal-merge-icon {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.merge-info-banner {
+  background-color: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  margin-bottom: 12px;
+}
+
+.merge-info-banner p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.merge-info-banner strong {
+  color: var(--text-primary);
+}
+
+.merge-prompt-question {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+.merge-preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  background-color: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 18px;
+}
+
+.merge-diff-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 8px;
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--border);
+}
+
+.merge-diff-row.is-new {
+  border-left-color: #2ea043;
+}
+
+.merge-diff-row.is-diff {
+  border-left-color: var(--accent);
+}
+
+.merge-diff-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.merge-diff-values {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  flex-wrap: wrap;
+}
+
+.merge-val-old {
+  color: var(--text-secondary);
+  text-decoration: line-through;
+  opacity: 0.8;
+}
+
+.merge-arrow {
+  color: var(--accent);
+  font-size: 11px;
+}
+
+.merge-val-new {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.modal-merge-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 /* --------------------------------------------------------------------------
    14. Small-Screen & Mobile Optimizations (<= 640px, <= 480px, <= 380px)
    -------------------------------------------------------------------------- */

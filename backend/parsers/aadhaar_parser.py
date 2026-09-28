@@ -13,7 +13,7 @@ from .common import (
     INDIAN_STATES, PINCODE_REGEX, AADHAAR_REGEX, MASKED_AADHAAR_REGEX,
     clean_line, is_header_noise, is_instruction_noise, is_valid_person_name,
     format_aadhaar_number, extract_aadhaar_number, extract_virtual_id,
-    FORBIDDEN_NAME_WORDS
+    FORBIDDEN_NAME_WORDS, get_state_from_pincode
 )
 from .date_util import calculate_age, normalize_date_string
 
@@ -230,6 +230,9 @@ class AadhaarParser:
                 state = st
                 break
 
+        if not state and pincode:
+            state = get_state_from_pincode(pincode)
+
         # 3. Address Lines
         cleaned_lines = [clean_line(l) for l in lines if clean_line(l)]
 
@@ -301,6 +304,42 @@ class AadhaarParser:
 
                 if clean_l:
                     address_parts.append(clean_l)
+
+        # Check if letter address exists in e-Aadhaar documents
+        letter_parts = []
+        for idx, line in enumerate(cleaned_lines):
+            if re.search(r"Enrolment|Enrollment|नोंदणी|To\b", line, re.IGNORECASE):
+                for offset in range(1, 10):
+                    if idx + offset < len(cleaned_lines):
+                        cand = cleaned_lines[idx + offset]
+                        if re.search(r"Signature|Aadhaar No|VID\b|DOB|Birth|Male|Female|महिला|पुरुष|INFORMATION|सूचना", cand, re.IGNORECASE):
+                            break
+                        if is_instruction_noise(cand) or is_header_noise(cand):
+                            continue
+                        if re.match(r"^\d{10}$", cand.strip()):
+                            continue
+                        if offset <= 2 and is_valid_person_name(cand):
+                            continue
+                        clean_l = cls._clean_address_line(cand)
+                        if clean_l:
+                            letter_parts.append(clean_l)
+                            if PINCODE_REGEX.search(clean_l):
+                                break
+                if any(PINCODE_REGEX.search(p) for p in letter_parts):
+                    break
+
+        # If no address captured yet, or if card address is corrupted/noisy (&, ;) while letter address is clean
+        if not address_parts:
+            if letter_parts:
+                address_parts = letter_parts
+        elif letter_parts and any(PINCODE_REGEX.search(p) for p in letter_parts):
+            card_addr_str = " ".join(address_parts)
+            letter_addr_str = " ".join(letter_parts)
+            has_letter_state = any(st.lower() in letter_addr_str.lower() for st in INDIAN_STATES)
+            has_card_state = any(st.lower() in card_addr_str.lower() for st in INDIAN_STATES)
+            has_card_symbols = bool(re.search(r"[&;~*^$]", card_addr_str))
+            if (not has_card_state and has_letter_state) or (has_card_symbols and not re.search(r"[&;~*^$]", letter_addr_str)):
+                address_parts = letter_parts
 
         address = ""
         if address_parts:
