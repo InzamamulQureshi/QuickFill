@@ -88,7 +88,8 @@ FORBIDDEN_NAME_WORDS = {
     "DOCUMENTS", "SUPPORT", "UPDATED", "ENTITIES", "SEEKING", "CONSENT",
     "WEST", "EAST", "NORTH", "SOUTH", "CHAWL", "COMPOUND", "URBAN", "RURAL",
     "COLONY", "SECTOR", "BLOCK", "LANE", "GALI", "MOHALLA", "TALUKA", "TEHSIL",
-    "YOUR", "YOURAADHAAR", "AADHAARNO", "NO", "GOV", "GOVIN", "GOVAM", "UIDAI", "EMAIL", "WWW", "HELP", "VERIFY", "SECURE", "QRCODE", "QR", "XML", "CODE", "ELECTRONICALLY", "GENERATED", "LETTER", "ISSUED"
+    "YOUR", "YOURAADHAAR", "AADHAARNO", "NO", "GOV", "GOVIN", "GOVAM", "UIDAI", "EMAIL", "WWW", "HELP", "VERIFY", "SECURE", "QRCODE", "QR", "XML", "CODE", "ELECTRONICALLY", "GENERATED", "LETTER", "ISSUED",
+    "CHILD", "CARE", "WIFE", "HUSBAND", "FATHER", "MOTHER", "DAUGHTER", "SON", "SPOUSE", "GUARDIAN"
 }
 
 # UIDAI e-Aadhaar informational boilerplate bullet points
@@ -128,7 +129,7 @@ def refine_text_spacing(text: str) -> str:
     s = re.sub(r"\)(?=[A-Za-z0-9])", r") ", s)
 
     # Relationship slashes: keep 'C/O', 'S/O', 'D/O', 'W/O' clean
-    s = re.sub(r"\b([CSDWH]/[Oic])(?=[A-Za-z])", r"\1 ", s, flags=re.IGNORECASE)
+    s = re.sub(r"\b([CSDWH]/[Oic0])[:\s.-]*(?=[A-Za-z])", r"\1: ", s, flags=re.IGNORECASE)
     # Add spacing around '/' between full words (e.g. Male/MALE -> Male / MALE, Date of Birth/DOB -> Date of Birth / DOB)
     s = re.sub(r"(?<=[a-zA-Z]{2})/(?=[a-zA-Z]{2})", r" / ", s)
 
@@ -152,6 +153,12 @@ def refine_text_spacing(text: str) -> str:
         (r"\bYearof\b", "Year of"),
         (r"\bshouldbe\b", "should be"),
         (r"\bnotfor\b", "not for"),
+        (r"\bChildof\b", "Child of"),
+        (r"\bCareof\b", "Care of"),
+        (r"\bWifeof\b", "Wife of"),
+        (r"\bSonof\b", "Son of"),
+        (r"\bDaughterof\b", "Daughter of"),
+        (r"\bHusbandof\b", "Husband of"),
     ]
     for pat, repl in common_glued:
         s = re.sub(pat, repl, s, flags=re.IGNORECASE)

@@ -91,7 +91,7 @@ class AadhaarParser:
                         if is_instruction_noise(cand) or is_header_noise(cand):
                             continue
                         cand_clean = re.sub(r"^[\d\s.,|:;~*\"'#/-]+", "", cand).strip()
-                        cand_name = re.split(r"\b(?:Address|पता|D/O|S/O|W/O|C/O)\b|[\"|~]", cand_clean)[0].strip()
+                        cand_name = re.split(r"\b(?:Address|पता|D/O|S/O|W/O|C/O|W/0|C/0|S/0|D/0|Father|Mother|Husband|Wife|Spouse|Guardian|Care\s*of|Child\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Husband\s*of|পিতা|মাতা|স্বামী|স্ত্রী|पिता|माता|पति|पत्नी)\b|[\"|~]", cand_clean)[0].strip()
                         if is_valid_person_name(cand_name):
                             words = [w for w in re.findall(r"[A-Za-z]+", cand_name) if len(w) > 1 and w.upper() not in FORBIDDEN_NAME_WORDS]
                             if len(words) >= 2:
@@ -125,7 +125,7 @@ class AadhaarParser:
                     break
 
         father_prefix_pat = re.compile(
-            r"(?:^|\b)(?:Father|Mother|Husband|Spouse|Guardian|পিতা|पिता|C/O|S/O|D/O|W/O|H/O)[\s:]*",
+            r"(?:^|\b)(?:Father|Mother|Husband|Wife|Spouse|Guardian|Care\s*of|Child\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Husband\s*of|পিতা|মাতা|স্বামী|স্ত্রী|पिता|माता|पति|पत्नी|C/O|S/O|D/O|W/O|H/O|C/0|S/0|D/0|W/0|H/0|W\s*/\s*[O0o]|C\s*/\s*[O0o]|S\s*/\s*[O0o]|D\s*/\s*[O0o])[\s:.)-]*",
             re.IGNORECASE
         )
 
@@ -138,7 +138,7 @@ class AadhaarParser:
                 if father_prefix_pat.search(line):
                     continue
                 cand_clean = re.sub(r"^[\d\s.,|:;~*\"'#/-]+", "", line).strip()
-                cand_clean = re.split(r"\b(?:Address|पता|D/O|S/O|W/O|C/O|Father|Mother|Husband|Spouse|Guardian|পিতা|पिता)\b|[\"|~]", cand_clean)[0].strip()
+                cand_clean = re.split(r"\b(?:Address|पता|D/O|S/O|W/O|C/O|W/0|C/0|S/0|D/0|Father|Mother|Husband|Wife|Spouse|Guardian|Care\s*of|Child\s*of|Son\s*of|Daughter\s*of|Wife\s*of|পিতা|মাতা|স্বামী|স্ত্রী|पिता|माता|पति|पत्नी)\b|[\"|~]", cand_clean)[0].strip()
                 if is_valid_person_name(cand_clean):
                     words = [w for w in re.findall(r"[A-Za-z]+", cand_clean) if len(w) > 1 and w.upper() not in FORBIDDEN_NAME_WORDS]
                     if len(words) >= 2:
@@ -158,7 +158,7 @@ class AadhaarParser:
             if is_instruction_noise(line) or is_header_noise(line):
                 continue
             cand_clean = re.sub(r"^[\d\s.,|:;~*\"'#/-]+", "", line).strip()
-            cand_clean = re.split(r"\b(?:Address|पता|D/O|S/O|W/O|C/O)\b|[\"|~]", cand_clean)[0].strip()
+            cand_clean = re.split(r"\b(?:Address|पता|D/O|S/O|W/O|C/O|W/0|C/0|S/0|D/0|Father|Mother|Husband|Wife|Spouse|Guardian|Care\s*of|Child\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Husband\s*of|পিতা|মাতা|স্বামী|স্ত্রী|पिता|माता|पति|पत्नी)\b|[\"|~]", cand_clean)[0].strip()
             if is_valid_person_name(cand_clean):
                 words = [w for w in re.findall(r"[A-Za-z]+", cand_clean) if len(w) > 1 and w.upper() not in FORBIDDEN_NAME_WORDS]
                 if len(words) >= 2:
@@ -175,8 +175,8 @@ class AadhaarParser:
         cleaned_lines = [clean_line(l) for l in lines if clean_line(l)]
 
         prefix_pattern = re.compile(
-            r"(?:Address|पता)[\s:]*(?:C/O|S/O|D/O|W/O|H/O|SIC|DIC|WIC|CIC|Care\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Husband\s*of|Father|Mother|Spouse|Guardian|आत्मज|पुत्र|पुत्री|पत्नी|পিতা|माता)[\s:.)-]+(?=[A-Za-z])"
-            r"|(?:\b(?:C/O|S/O|D/O|W/O|H/O|Care\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Husband\s*of|Father|Mother|Spouse|Guardian|आत्मज|पुत्र|पुत्री|पत्नी|পিতা|माता)\b[\s:.)-]+)"
+            r"(?:Address|पता)[\s:]*(?:C/O|S/O|D/O|W/O|H/O|C/0|S/0|D/0|W/0|H/0|W\s*/\s*[O0o]|C\s*/\s*[O0o]|S\s*/\s*[O0o]|D\s*/\s*[O0o]|SIC|DIC|WIC|CIC|Care\s*of|Child\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Husband\s*of|Father|Mother|Husband|Wife|Spouse|Guardian|आत्मज|पुत्र|पुत्री|पति|पत्नी|পিতা|মাতা|স্বামী|স্ত্রী|माता)[\s:.)-]+(?=[A-Za-z])"
+            r"|(?:\b(?:C/O|S/O|D/O|W/O|H/O|Care\s*of|Child\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Husband\s*of|Father|Mother|Husband|Wife|Spouse|Guardian|आत्मज|पुत्र|पुत्री|पति|पत्नी|পিতা|মাতা|স্বামী|স্ত্রী|माता)\b[\s:.)-]+)"
             r"|(?:\b(?:SO|DO|WO|CO|HO)\b[\s:.-]+(?=[A-Za-z]))"
             r"|(?:\"?1/[80o]\s*[JjDdCcSs][Oo][\s:.-]+)",
             re.IGNORECASE
@@ -221,7 +221,7 @@ class AadhaarParser:
 
         # Fallback regex across entire raw_text
         m_raw = re.search(
-            r"(?:\b(?:C/O|S/O|D/O|W/O|H/O|Care\s*of|Son\s*of|Daughter\s*of|Wife\s*of)\b[\s:.)-]+)"
+            r"(?:\b(?:C/O|S/O|D/O|W/O|H/O|C/0|S/0|D/0|W/0|H/0|W\s*/\s*[O0o]|C\s*/\s*[O0o]|Care\s*of|Child\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Husband\s*of|Father|Mother|Husband|Wife|Spouse|Guardian)\b[\s:.)-]+)"
             r"([A-Za-z\s.]+?)(?:,|\n|$|\d|Flat|H\.No|House|Plot|Ward|Village|Post|Dist|Near)",
             raw_text, re.IGNORECASE
         )
@@ -241,7 +241,7 @@ class AadhaarParser:
 
         # If line contains DOB on left and Address on right
         if re.search(r"DOB|Date of Birth", clean_l, re.IGNORECASE):
-            m = re.search(r"(?:\"?1/[80o]\s*[JjDdCcSs][Oo][\s:.-]+|D/O|S/O|W/O|C/O|Address)[\s:.-]*", clean_l, re.IGNORECASE)
+            m = re.search(r"(?:\"?1/[80o]\s*[JjDdCcSs][Oo][\s:.-]+|D/O|S/O|W/O|C/O|C/0|W/0|S/0|D/0|Child\s*of|Care\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Husband\s*of|Address)[\s:.-]*", clean_l, re.IGNORECASE)
             if m:
                 clean_l = clean_l[m.end():].strip()
             else:
@@ -314,7 +314,7 @@ class AadhaarParser:
 
             # Look for explicit Address:
             addr_match = re.search(r"(?:^|[:\s|])(?:Address|पता)[\s:]*", line, re.IGNORECASE)
-            co_strict = None if has_explicit_address_label else re.search(r"(?:^|[:\s|])(?:C/O|S/O|D/O|W/O|H/O)[\s:.)-]+[A-Za-z]+", line, re.IGNORECASE)
+            co_strict = None if has_explicit_address_label else re.search(r"(?:^|[:\s|])(?:C/O|S/O|D/O|W/O|H/O|C/0|S/0|D/0|W/0|H/0|Care\s*of|Child\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Husband\s*of)[\s:.)-]+[A-Za-z]+", line, re.IGNORECASE)
             ocr_co = None if has_explicit_address_label else re.search(r"(?:\"?1/[80o]\s*[JjDdCcSs][Oo][\s:.-]+[A-Za-z]+)", line, re.IGNORECASE)
 
             if not capturing and (addr_match or co_strict or ocr_co):
@@ -405,7 +405,7 @@ class AadhaarParser:
             combined = ", ".join(address_parts)
             # Remove Care-Of line or guardian from beginning of address if present
             combined = re.sub(
-                r"^(?:C/O|S/O|D/O|W/O|H/O|SIC|DIC|WIC|CIC|Care\s*of|Son\s*of|Daughter\s*of|Wife\s*of)[\s:.)-]*[^,]+,\s*",
+                r"^(?:C/O|S/O|D/O|W/O|H/O|C/0|S/0|D/0|W/0|H/0|W\s*[/\\|]\s*[O0o]|C\s*[/\\|]\s*[O0o]|S\s*[/\\|]\s*[O0o]|D\s*[/\\|]\s*[O0o]|SIC|DIC|WIC|CIC|Care\s*of|Child\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Husband\s*of)[\s:.)-]*[^,]+,\s*",
                 "", combined, flags=re.IGNORECASE
             ).strip()
             # If line starts with residual guardian name words followed by a comma

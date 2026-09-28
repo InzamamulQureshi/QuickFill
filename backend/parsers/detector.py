@@ -62,7 +62,8 @@ class DocumentDetector:
         # 3. Check for Aadhaar Back indicators
         back_indicators = [
             "ADDRESS", "पता", "C/O", "S/O", "W/O", "D/O", "H/O",
-            "SIC", "DIC", "WIC", "CIC", "1947", "HELP@UIDAI"
+            "SIC", "DIC", "WIC", "CIC", "1947", "HELP@UIDAI",
+            "CHILD OF", "CARE OF", "WIFE OF"
         ]
         back_score = sum(1 for ind in back_indicators if ind in text_upper)
         if PINCODE_REGEX.search(raw_text):
@@ -78,7 +79,7 @@ class DocumentDetector:
             re.search(r"DOB|Birth|जन्म|MALE|FEMALE|पुरुष|महिला", text_upper)
         )
         has_address_or_pin = bool(
-            PINCODE_REGEX.search(raw_text) and re.search(r"ADDRESS|पता|C/O|S/O|W/O|D/O", text_upper)
+            PINCODE_REGEX.search(raw_text) and re.search(r"ADDRESS|पता|C/O|S/O|W/O|D/O|CHILD\s*OF|CARE\s*OF|WIFE\s*OF", text_upper)
         )
 
         if has_dob_or_gender and has_address_or_pin:
