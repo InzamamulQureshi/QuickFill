@@ -10,10 +10,13 @@
    1. Theme Variables
    -------------------------------------------------------------------------- */
 :root, body.dark-theme {
-  /* Dark Theme: Neutral Uncolored Words with Warm Accent */
+  /* Dark Theme */
   --bg-base: #121212;
   --bg-surface: #18181b;
-  --bg-subtle: #242429;
+  --bg-subtle: #222226;
+  --bg-input: #121212;
+  --bg-dropzone: #1a1a1e;
+  --bg-pill: #222226;
   --border: #2e2e34;
   --border-hover: #FF9644;
 
@@ -29,7 +32,7 @@
   --accent-contrast: #121212;
 
   /* Shared Tokens */
-  --page-px: clamp(14px, 3vw, 28px);
+  --page-px: clamp(16px, 3vw, 36px);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -37,26 +40,33 @@
   --font-mono: 'Geist Mono', monospace;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.6);
-  --transition-fast: 0.15s ease;
+  --transition-fast: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-theme: background-color 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+                      border-color 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+                      color 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+                      box-shadow 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body.light-theme {
   /* Light Theme: High-Contrast Linen Canvas & Defined Pure White Cards */
   --bg-base: #ebe4da;
   --bg-surface: #ffffff;
-  --bg-subtle: #f6f1ea;
+  --bg-subtle: #ded5c8;
+  --bg-input: #ffffff;
+  --bg-dropzone: #f7f3ec;
+  --bg-pill: #f7f3ec;
   --border: #c4b39f;
   --border-hover: #e07a22;
 
   /* Typography: Razor-Sharp Dark Charcoal Text */
   --text-primary: #111113;
-  --text-secondary: #42392f;
-  --text-muted: #6e6152;
+  --text-secondary: #4a4035;
+  --text-muted: #766a5c;
 
   /* Accent / Interactive (#FF9644) */
   --accent: #FF9644;
   --accent-hover: #e57e28;
-  --accent-subtle: rgba(255, 150, 68, 0.14);
+  --accent-subtle: rgba(255, 150, 68, 0.12);
   --accent-contrast: #ffffff;
 
   --shadow-sm: 0 3px 12px rgba(45, 35, 25, 0.08), 0 1px 3px rgba(45, 35, 25, 0.05);
@@ -83,9 +93,48 @@ body {
   color: var(--text-primary);
   line-height: 1.5;
   min-height: 100vh;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  transition: var(--transition-theme);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Synchronized Theme Surface Transitions */
+.navbar,
+.brand-logo,
+.brand-title,
+.engine-badge,
+.btn-icon,
+.panel,
+.panel-heading,
+.subtle-tag,
+.status-pill,
+.segmented-control,
+.seg-btn,
+.dropzone,
+.sample-pill,
+.demo-label,
+input[type="text"],
+textarea,
+label,
+.field-origin,
+.tag-meta,
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-ghost,
+.preview-box,
+.preview-media,
+.raw-text-view,
+.modal-window,
+.feature-item,
+.password-hint-box,
+.merge-info-banner,
+.merge-preview-container,
+.merge-diff-row,
+.toast {
+  transition: var(--transition-theme);
 }
 
 /* --------------------------------------------------------------------------
@@ -97,17 +146,18 @@ body {
   z-index: 50;
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border);
-  padding: clamp(10px, 1.8vw, 14px) var(--page-px);
+  padding: clamp(10px, 1.5vh, 16px) var(--page-px);
   width: 100%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .navbar-container {
-  max-width: 1240px;
+  max-width: min(1560px, 94vw);
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   width: 100%;
 }
 
@@ -119,14 +169,14 @@ body {
 }
 
 .brand-logo {
-  width: 36px;
-  height: 36px;
+  width: clamp(34px, 2.5vw, 40px);
+  height: clamp(34px, 2.5vw, 40px);
   border-radius: var(--radius-sm);
   background: var(--bg-surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   color: var(--accent);
   font-weight: 700;
-  font-size: 14px;
+  font-size: clamp(13px, 0.9vw, 15px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -134,15 +184,9 @@ body {
   flex-shrink: 0;
 }
 
-body.light-theme .brand-logo {
-  background: var(--bg-surface);
-  border-color: var(--border);
-  color: var(--accent);
-}
-
 .brand-title {
   font-weight: 700;
-  font-size: 1.35rem;
+  font-size: clamp(16px, 1.25vw, 22px);
   color: var(--text-primary);
   line-height: 1.2;
   letter-spacing: -0.025em;
@@ -162,11 +206,6 @@ body.light-theme .brand-logo {
   white-space: nowrap;
 }
 
-body.light-theme .engine-badge {
-  background-color: var(--bg-subtle);
-  color: var(--text-secondary);
-  border-color: var(--border);
-}
 
 .status-dot {
   width: 6px;
@@ -194,7 +233,7 @@ body.light-theme .engine-badge {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: var(--transition-theme);
 }
 
 .btn-icon:hover {
@@ -213,14 +252,24 @@ body.light-theme .icon-moon { display: block; }
    4. Page Layout (Fluid Grid across Desktop, Tablet, & Mobile)
    -------------------------------------------------------------------------- */
 .page-container {
-  max-width: 1240px;
-  margin: clamp(16px, 3vw, 32px) auto;
+  max-width: min(1560px, 94vw);
+  margin: clamp(20px, 3.5vh, 44px) auto;
   padding: 0 var(--page-px);
   display: grid;
-  grid-template-columns: minmax(360px, 460px) 1fr;
-  gap: clamp(16px, 2.5vw, 28px);
+  grid-template-columns: minmax(380px, 1fr) minmax(480px, 1.35fr);
+  gap: clamp(18px, 2.2vw, 32px);
   align-items: start;
   width: 100%;
+  flex: 1;
+}
+
+@media (min-width: 1600px) {
+  .page-container {
+    max-width: 1680px;
+    grid-template-columns: 520px 1fr;
+    gap: 36px;
+    margin: 40px auto;
+  }
 }
 
 /* Tablet Layout (<= 1000px) */
@@ -255,7 +304,7 @@ body.light-theme .icon-moon { display: block; }
   background-color: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: clamp(16px, 2.5vw, 24px);
+  padding: clamp(20px, 2.2vw, 32px);
   box-shadow: var(--shadow-sm);
   min-width: 0;
   width: 100%;
@@ -266,11 +315,11 @@ body.light-theme .icon-moon { display: block; }
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  margin-bottom: 18px;
+  margin-bottom: clamp(16px, 2vh, 22px);
 }
 
 .panel-heading {
-  font-size: 16px;
+  font-size: clamp(16px, 1.15vw, 19px);
   font-weight: 600;
   color: var(--text-primary);
   letter-spacing: -0.2px;
@@ -303,11 +352,11 @@ body.light-theme .icon-moon { display: block; }
 .segmented-control {
   display: flex;
   background-color: var(--bg-subtle);
-  padding: 3px;
+  padding: 4px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
-  margin-bottom: 16px;
-  gap: 2px;
+  margin-bottom: clamp(14px, 2vh, 20px);
+  gap: 4px;
 }
 
 .seg-btn {
@@ -316,13 +365,13 @@ body.light-theme .icon-moon { display: block; }
   border: none;
   color: var(--text-muted);
   font-family: inherit;
-  font-size: 13px;
+  font-size: clamp(12.5px, 0.85vw, 14px);
   font-weight: 500;
-  padding: 8px 12px;
-  min-height: 40px;
+  padding: clamp(8px, 1.1vh, 11px) 12px;
+  min-height: clamp(38px, 4.4vh, 44px);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: var(--transition-theme);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -331,6 +380,8 @@ body.light-theme .icon-moon { display: block; }
 .seg-btn.active {
   background-color: var(--bg-surface);
   color: var(--text-primary);
+  font-weight: 600;
+  border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
 }
 
@@ -338,13 +389,13 @@ body.light-theme .icon-moon { display: block; }
    6. Dropzone & File Upload
    -------------------------------------------------------------------------- */
 .dropzone {
-  border: 1.5px dashed var(--border);
+  border: 1px dashed var(--border);
   border-radius: var(--radius-md);
-  padding: clamp(28px, 4vw, 38px) 16px;
+  padding: clamp(32px, 4.8vh, 54px) clamp(16px, 2vw, 32px);
   text-align: center;
-  background-color: var(--bg-surface);
+  background-color: var(--bg-dropzone);
   cursor: pointer;
-  transition: border-color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: var(--transition-theme);
 }
 
 .dropzone:hover, .dropzone.dragover {
@@ -357,12 +408,14 @@ body.light-theme .icon-moon { display: block; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: clamp(8px, 1.2vh, 12px);
 }
 
 .upload-icon {
   color: var(--accent);
-  margin-bottom: 4px;
+  width: clamp(32px, 2.8vw, 42px);
+  height: clamp(32px, 2.8vw, 42px);
+  margin-bottom: 2px;
   transition: transform var(--transition-fast);
 }
 
@@ -371,15 +424,15 @@ body.light-theme .icon-moon { display: block; }
 }
 
 .dropzone-primary {
-  font-size: 14.5px;
+  font-size: clamp(14px, 1vw, 16.5px);
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .dropzone-secondary {
-  font-size: 12px;
+  font-size: clamp(11.5px, 0.8vw, 13px);
   color: var(--text-muted);
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .dropzone-actions {
@@ -414,7 +467,7 @@ body.light-theme .icon-moon { display: block; }
 .camera-frame-guide {
   position: absolute;
   inset: clamp(10px, 3vw, 18px);
-  border: 1.5px dashed var(--accent);
+  border: 1px dashed var(--accent);
   border-radius: var(--radius-sm);
   display: flex;
   align-items: flex-end;
@@ -545,7 +598,7 @@ body.light-theme .icon-moon { display: block; }
 }
 
 .sample-pill {
-  background-color: var(--bg-surface);
+  background-color: var(--bg-pill);
   border: 1px solid var(--border);
   color: var(--text-secondary);
   font-family: inherit;
@@ -555,7 +608,7 @@ body.light-theme .icon-moon { display: block; }
   border-radius: var(--radius-sm);
   cursor: pointer;
   white-space: nowrap;
-  transition: all var(--transition-fast);
+  transition: var(--transition-theme), transform 0.15s ease;
   text-align: center;
   display: flex;
   align-items: center;
@@ -632,18 +685,19 @@ input[type="text"], textarea {
   max-width: 100%;
   box-sizing: border-box;
   font-family: inherit;
-  font-size: 14px;
+  font-size: clamp(13.5px, 0.95vw, 15px);
   color: var(--text-primary);
-  background-color: var(--bg-base);
+  background-color: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 10px 14px;
+  padding: clamp(10px, 1.3vh, 13px) clamp(12px, 1vw, 16px);
   outline: none;
-  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+  transition: var(--transition-theme);
 }
 
 input[type="text"]:focus, textarea:focus {
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-subtle);
 }
 
 input::placeholder, textarea::placeholder {
@@ -658,7 +712,7 @@ input::placeholder, textarea::placeholder {
 
 textarea {
   resize: vertical;
-  min-height: 76px;
+  min-height: clamp(80px, 10vh, 110px);
   max-width: 100%;
   box-sizing: border-box;
 }
@@ -684,14 +738,14 @@ textarea {
    -------------------------------------------------------------------------- */
 .btn {
   font-family: inherit;
-  font-size: 13px;
+  font-size: clamp(12.5px, 0.9vw, 14px);
   font-weight: 500;
-  padding: 10px 18px;
-  min-height: 42px;
+  padding: clamp(9px, 1.3vh, 13px) clamp(16px, 1.6vw, 24px);
+  min-height: clamp(40px, 4.5vh, 46px);
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: var(--transition-theme), transform 0.15s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -700,14 +754,15 @@ textarea {
 }
 
 .btn-sm {
-  padding: 6px 12px;
-  min-height: 34px;
-  font-size: 12px;
+  padding: clamp(6px, 1vh, 8px) clamp(10px, 1.2vw, 14px);
+  min-height: clamp(32px, 3.8vh, 36px);
+  font-size: clamp(11.5px, 0.8vw, 13px);
 }
 
 .btn-primary {
   background-color: var(--accent);
   color: var(--accent-contrast);
+  font-weight: 600;
 }
 
 .btn-primary:hover {
@@ -715,14 +770,15 @@ textarea {
 }
 
 .btn-secondary {
-  background-color: var(--bg-subtle);
-  border-color: var(--border);
+  background-color: var(--bg-pill);
+  border: 1px solid var(--border);
   color: var(--text-primary);
 }
 
 .btn-secondary:hover {
-  background-color: var(--bg-base);
+  background-color: var(--bg-surface);
   border-color: var(--border-hover);
+  color: var(--accent);
 }
 
 .btn-ghost {
@@ -761,7 +817,7 @@ textarea {
 .field-populated {
   border-color: var(--accent) !important;
   background-color: var(--accent-subtle) !important;
-  transition: background-color 0.4s ease;
+  transition: var(--transition-theme);
 }
 
 .badge {
@@ -775,28 +831,26 @@ textarea {
 }
 
 /* --------------------------------------------------------------------------
-   12. Toast Notification (Sleek Floating Pill)
+   12. Toast Notification (Matches UI Component System)
    -------------------------------------------------------------------------- */
 .toast {
   position: fixed;
-  bottom: 28px;
+  bottom: 24px;
   left: 50%;
-  transform: translateX(-50%) translateY(20px);
+  transform: translateX(-50%) translateY(14px);
   background-color: var(--bg-surface);
-  border: 1px solid var(--border-hover);
-  border-radius: 9999px;
-  padding: 10px 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-md), 0 4px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-md);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.22s ease, transform 0.22s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease, var(--transition-theme);
   z-index: 100;
-  max-width: 90vw;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  max-width: min(480px, calc(100vw - 32px));
 }
 
 @media (max-width: 580px) {
@@ -1269,133 +1323,14 @@ textarea {
   .toast {
     left: 50%;
     right: auto;
-    bottom: 12px;
-    transform: translateX(-50%) translateY(12px);
-    padding: 8px 14px;
+    bottom: 14px;
+    transform: translateX(-50%) translateY(10px);
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    max-width: calc(100vw - 24px);
   }
 
   .toast.show {
     transform: translateX(-50%) translateY(0);
   }
-}
-
-/* --------------------------------------------------------------------------
-   15. Light Theme High-Visibility & Card Elevation
-   -------------------------------------------------------------------------- */
-body.light-theme .panel {
-  background-color: #ffffff;
-  border: 1.5px solid var(--border);
-  box-shadow: var(--shadow-sm);
-}
-
-body.light-theme .navbar {
-  background-color: #ffffff;
-  border-bottom: 1.5px solid var(--border);
-  box-shadow: 0 1px 4px rgba(45, 35, 25, 0.05);
-}
-
-body.light-theme .segmented-control {
-  background-color: #ded5c8;
-  border: 1px solid var(--border);
-}
-
-body.light-theme .seg-btn {
-  color: #554a3e;
-}
-
-body.light-theme .seg-btn.active {
-  background-color: #ffffff;
-  color: #111113;
-  font-weight: 600;
-  box-shadow: 0 2px 5px rgba(45, 35, 25, 0.1);
-}
-
-body.light-theme .dropzone {
-  background-color: #f7f3ec;
-  border: 1.5px dashed #b8a691;
-}
-
-body.light-theme .dropzone:hover,
-body.light-theme .dropzone.dragover {
-  background-color: #fff4ea;
-  border-color: var(--accent);
-}
-
-body.light-theme .sample-pill {
-  background-color: #f7f3ec;
-  border: 1px solid var(--border);
-  color: #1c1611;
-  font-weight: 500;
-}
-
-body.light-theme .sample-pill:hover {
-  background-color: #fff0e0;
-  border-color: var(--accent);
-  color: #c45e08;
-}
-
-body.light-theme input[type="text"],
-body.light-theme textarea {
-  background-color: #ffffff;
-  border: 1.5px solid var(--border);
-  color: #111113;
-}
-
-body.light-theme input[type="text"]:focus,
-body.light-theme textarea:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(255, 150, 68, 0.18);
-}
-
-body.light-theme .input-readonly {
-  background-color: #f4eee6 !important;
-  color: #4a4035 !important;
-  border-color: var(--border) !important;
-}
-
-body.light-theme .btn-secondary {
-  background-color: #f7f3ec;
-  border: 1.5px solid var(--border);
-  color: #111113;
-  font-weight: 500;
-}
-
-body.light-theme .btn-secondary:hover {
-  background-color: #ffffff;
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-body.light-theme .preview-box {
-  background-color: #f7f3ec;
-  border: 1.5px solid var(--border);
-}
-
-body.light-theme .preview-media {
-  background-color: #ffffff;
-  border: 1px solid var(--border);
-}
-
-body.light-theme .raw-text-view {
-  background-color: #ffffff;
-  border: 1px solid var(--border);
-  color: #111113;
-}
-
-body.light-theme .modal-window {
-  background-color: #ffffff;
-  border: 1.5px solid var(--border);
-  box-shadow: var(--shadow-md);
-}
-
-body.light-theme .feature-item,
-body.light-theme .password-hint-box,
-body.light-theme .merge-info-banner,
-body.light-theme .merge-preview-container {
-  background-color: #f7f3ec;
-  border: 1px solid var(--border);
-}
-
-body.light-theme .merge-diff-row {
-  background-color: #ffffff;
 }
