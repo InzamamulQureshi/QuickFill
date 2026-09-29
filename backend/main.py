@@ -261,18 +261,20 @@ if os.path.exists(frontend_dir):
         return FileResponse(os.path.join(frontend_dir, "index.html"))
 
     @app.get("/favicon.ico")
-    @app.get("/favicon.svg")
-    async def serve_favicon():
-        fav_path = os.path.join(frontend_dir, "favicon.svg")
-        if os.path.exists(fav_path):
-            return FileResponse(fav_path, media_type="image/svg+xml")
+    async def serve_favicon_ico():
+        fav_ico = os.path.join(frontend_dir, "favicon.ico")
+        if os.path.exists(fav_ico):
+            return FileResponse(fav_ico, media_type="image/x-icon")
+        logo_path = os.path.join(frontend_dir, "logo.webp")
+        if os.path.exists(logo_path):
+            return FileResponse(logo_path, media_type="image/webp")
         return Response(status_code=404)
 
-    @app.get("/logo.svg")
-    async def serve_logo():
-        logo_path = os.path.join(frontend_dir, "logo.svg")
+    @app.get("/logo.webp")
+    async def serve_logo_webp():
+        logo_path = os.path.join(frontend_dir, "logo.webp")
         if os.path.exists(logo_path):
-            return FileResponse(logo_path, media_type="image/svg+xml")
+            return FileResponse(logo_path, media_type="image/webp")
         return Response(status_code=404)
 
     @app.get("/og-image.png")
