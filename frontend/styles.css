@@ -41,26 +41,26 @@
 }
 
 body.light-theme {
-  /* Light Theme: Grounded Warm Linen Canvas (Comfortable, Not Blinding White) */
-  --bg-base: #f5ebe1;
-  --bg-surface: #FFFDF1;
-  --bg-subtle: #ece0d2;
-  --border: #dfb282;
-  --border-hover: #FF9644;
+  /* Light Theme: High-Contrast Linen Canvas & Defined Pure White Cards */
+  --bg-base: #ebe4da;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f6f1ea;
+  --border: #c4b39f;
+  --border-hover: #e07a22;
 
-  /* Typography: Crisp Neutral Dark Text */
-  --text-primary: #18181b;
-  --text-secondary: #52525b;
-  --text-muted: #71717a;
+  /* Typography: Razor-Sharp Dark Charcoal Text */
+  --text-primary: #111113;
+  --text-secondary: #42392f;
+  --text-muted: #6e6152;
 
-  /* Accent / Interactive */
+  /* Accent / Interactive (#FF9644) */
   --accent: #FF9644;
-  --accent-hover: #e67d28;
-  --accent-subtle: rgba(255, 150, 68, 0.12);
+  --accent-hover: #e57e28;
+  --accent-subtle: rgba(255, 150, 68, 0.14);
   --accent-contrast: #ffffff;
 
-  --shadow-sm: 0 1px 4px rgba(28, 24, 21, 0.06);
-  --shadow-md: 0 8px 24px rgba(28, 24, 21, 0.1);
+  --shadow-sm: 0 3px 12px rgba(45, 35, 25, 0.08), 0 1px 3px rgba(45, 35, 25, 0.05);
+  --shadow-md: 0 12px 28px -4px rgba(45, 35, 25, 0.14), 0 4px 12px -2px rgba(45, 35, 25, 0.06);
 }
 
 /* --------------------------------------------------------------------------
@@ -1277,4 +1277,125 @@ textarea {
   .toast.show {
     transform: translateX(-50%) translateY(0);
   }
+}
+
+/* --------------------------------------------------------------------------
+   15. Light Theme High-Visibility & Card Elevation
+   -------------------------------------------------------------------------- */
+body.light-theme .panel {
+  background-color: #ffffff;
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+body.light-theme .navbar {
+  background-color: #ffffff;
+  border-bottom: 1.5px solid var(--border);
+  box-shadow: 0 1px 4px rgba(45, 35, 25, 0.05);
+}
+
+body.light-theme .segmented-control {
+  background-color: #ded5c8;
+  border: 1px solid var(--border);
+}
+
+body.light-theme .seg-btn {
+  color: #554a3e;
+}
+
+body.light-theme .seg-btn.active {
+  background-color: #ffffff;
+  color: #111113;
+  font-weight: 600;
+  box-shadow: 0 2px 5px rgba(45, 35, 25, 0.1);
+}
+
+body.light-theme .dropzone {
+  background-color: #f7f3ec;
+  border: 1.5px dashed #b8a691;
+}
+
+body.light-theme .dropzone:hover,
+body.light-theme .dropzone.dragover {
+  background-color: #fff4ea;
+  border-color: var(--accent);
+}
+
+body.light-theme .sample-pill {
+  background-color: #f7f3ec;
+  border: 1px solid var(--border);
+  color: #1c1611;
+  font-weight: 500;
+}
+
+body.light-theme .sample-pill:hover {
+  background-color: #fff0e0;
+  border-color: var(--accent);
+  color: #c45e08;
+}
+
+body.light-theme input[type="text"],
+body.light-theme textarea {
+  background-color: #ffffff;
+  border: 1.5px solid var(--border);
+  color: #111113;
+}
+
+body.light-theme input[type="text"]:focus,
+body.light-theme textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(255, 150, 68, 0.18);
+}
+
+body.light-theme .input-readonly {
+  background-color: #f4eee6 !important;
+  color: #4a4035 !important;
+  border-color: var(--border) !important;
+}
+
+body.light-theme .btn-secondary {
+  background-color: #f7f3ec;
+  border: 1.5px solid var(--border);
+  color: #111113;
+  font-weight: 500;
+}
+
+body.light-theme .btn-secondary:hover {
+  background-color: #ffffff;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+body.light-theme .preview-box {
+  background-color: #f7f3ec;
+  border: 1.5px solid var(--border);
+}
+
+body.light-theme .preview-media {
+  background-color: #ffffff;
+  border: 1px solid var(--border);
+}
+
+body.light-theme .raw-text-view {
+  background-color: #ffffff;
+  border: 1px solid var(--border);
+  color: #111113;
+}
+
+body.light-theme .modal-window {
+  background-color: #ffffff;
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-md);
+}
+
+body.light-theme .feature-item,
+body.light-theme .password-hint-box,
+body.light-theme .merge-info-banner,
+body.light-theme .merge-preview-container {
+  background-color: #f7f3ec;
+  border: 1px solid var(--border);
+}
+
+body.light-theme .merge-diff-row {
+  background-color: #ffffff;
 }
