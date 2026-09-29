@@ -80,6 +80,10 @@ body.light-theme {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 0.18s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 html {
@@ -101,25 +105,33 @@ body {
 }
 
 /* Synchronized Theme Surface Transitions */
+body,
 .navbar,
 .brand-logo,
 .brand-title,
 .engine-badge,
 .btn-icon,
 .panel,
+.panel-header,
 .panel-heading,
 .subtle-tag,
 .status-pill,
 .segmented-control,
 .seg-btn,
 .dropzone,
-.sample-pill,
+.dropzone-inner,
+.dropzone-primary,
+.dropzone-secondary,
+.upload-icon,
+.demo-samples,
 .demo-label,
+.sample-pill,
 input[type="text"],
 textarea,
 label,
 .field-origin,
 .tag-meta,
+.form-actions,
 .btn,
 .btn-primary,
 .btn-secondary,
@@ -692,6 +704,9 @@ input[type="text"], textarea {
   border-radius: var(--radius-sm);
   padding: clamp(10px, 1.3vh, 13px) clamp(12px, 1vw, 16px);
   outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
   transition: var(--transition-theme);
 }
 
@@ -1184,7 +1199,7 @@ textarea {
 
   input[type="text"], textarea {
     padding: 10px 12px;
-    font-size: 13.5px;
+    font-size: 16px;
   }
 
   .demo-samples {
@@ -1299,7 +1314,7 @@ textarea {
 
   input[type="text"], textarea {
     padding: 8px 10px;
-    font-size: 13px;
+    font-size: 16px;
   }
 
   .dropzone {

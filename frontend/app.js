@@ -11,14 +11,17 @@ document.addEventListener("DOMContentLoaded", () => {
   applyTheme(storedTheme);
 
   function applyTheme(theme) {
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
     if (theme === "light") {
       document.body.classList.remove("dark-theme");
       document.body.classList.add("light-theme");
       localStorage.setItem("qf-theme", "light");
+      if (metaTheme) metaTheme.setAttribute("content", "#ffffff");
     } else {
       document.body.classList.remove("light-theme");
       document.body.classList.add("dark-theme");
       localStorage.setItem("qf-theme", "dark");
+      if (metaTheme) metaTheme.setAttribute("content", "#121212");
     }
   }
 

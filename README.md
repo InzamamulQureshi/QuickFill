@@ -1,126 +1,61 @@
 # QuickFill
 
-A fast, offline identity document parser and KYC form auto-filler for Indian ID cards (UIDAI Aadhaar and Income Tax PAN). All image processing and OCR operations execute entirely on the local device, ensuring complete data privacy without cloud transmission.
+A fast, offline identity document parser and KYC form auto-filler for Indian ID cards (UIDAI Aadhaar and Income Tax PAN). All image processing and OCR operations run entirely on the local device, ensuring complete data privacy without cloud transmission.
 
 ## Features
 
-- **Document Processing**: Automatic classification and parsing for Aadhaar Card (Front, Back, PVC Card, e-Aadhaar PDF) and PAN Card.
-- **Encrypted PDF Support**: Native modal workflow for unlocking password-protected UIDAI e-Aadhaar PDFs with UIDAI credential hints.
-- **Computer Vision Enhancement**: OpenCV pipeline handling soft-focus deblurring (unsharp masking), perspective rectification (4-point card contour detection), automated deskewing, and adaptive contrast equalization (CLAHE).
-- **Offline OCR Engine**: Hardware-accelerated local text extraction via RapidOCR / ONNX Runtime and Windows Media OCR (`winocr`) with automatic fallback to Tesseract OCR.
-- **Dynamic Age Calculation**: Extracts Date of Birth and computes exact chronological age (years, months) in real time.
-- **Smart Merge Confirmation**: Interactive comparison modal with side-by-side diff preview allowing users to selectively merge or replace applicant fields when scanning supplementary cards.
+- **Document Support**: Automatic classification and parsing for UIDAI Aadhaar (Front, Back, PVC Card, e-Aadhaar PDF) and Income Tax PAN cards.
+- **Encrypted PDF Handling**: In-browser password unlock workflow for password-protected UIDAI e-Aadhaar PDFs with format hints.
+- **Computer Vision Pipeline**: OpenCV enhancement featuring soft-focus deblurring, 4-point perspective warp, deskewing, and adaptive contrast equalization (CLAHE).
+- **Offline OCR Engine**: Local text extraction via RapidOCR / ONNX Runtime and Windows Media OCR (`winocr`) with automatic Tesseract OCR fallback.
+- **Dynamic Age Calculation**: Real-time chronological age computation from extracted Date of Birth.
+- **Smart Merge Confirmation**: Side-by-side diff preview modal allowing selective merging of supplementary cards into existing form details.
 - **Modern Design System**:
-  - **Typography**: Precision typography powered by **Geist & Geist Mono** by Vercel.
-  - **Balanced Warm Palette**:
-    - **Dark Mode**: `#121212` dark base canvas, clean uncolored neutral typography (`#F4F4F5` / `#A1A1AA`), and `#FF9644` warm orange interactive highlights.
-    - **Light Mode**: `#F5EBE1` grounded warm linen canvas (comfortable, non-glare), `#FFFDF1` ivory card surfaces, `#DFB282` borders, and `#FF9644` warm orange interactive highlights.
-  - **Minimalist Branding**: Clean typography-first header, monochrome border logo with accents removed, active OCR engine badge inside the Info dialog, and balanced 2x2 quick test sample grid.
-- **Multiple Input Methods**: Supports direct file drag-and-drop, clipboard image paste (Ctrl+V / Paste button), and live camera stream capture.
-- **Data Export**: Export structured form data directly as JSON or copy to clipboard.
-
-## Architecture
-
-```
-User Input (Upload / Camera)
-         │
-         ▼
-FastAPI Backend (/api/extract)
-         │
-         ▼
-OpenCV Preprocessor
-  ├── 4-Point Perspective Warp (Card Detection)
-  ├── Unsharp Masking & Edge Crisp (Deblur)
-  ├── Rotational Deskewing
-  └── Contrast Equalization (CLAHE)
-         │
-         ▼
-Unified OCR Engine (Windows Media OCR / Tesseract)
-         │
-         ▼
-Document Classifier & Dispatcher
-  ├── Aadhaar Front Parser (Name, DOB, Gender, UID)
-  ├── Aadhaar Back Parser (Care-of, Address, PIN, State)
-  └── PAN Parser (Name, Father's Name, DOB, PAN)
-         │
-         ▼
-Structured JSON -> Auto-Fill Form & Smart Merge
-```
-
-## Project Structure
-
-```
-├── backend/
-│   ├── main.py              # FastAPI endpoints and static file serving
-│   ├── ocr_engine.py        # OCR engine abstraction and orientation recovery
-│   ├── preprocessor.py      # OpenCV enhancement (deblur, deskew, perspective warp)
-│   ├── sample_generator.py  # Synthetic sample cards for verification
-│   └── parsers/
-│       ├── aadhaar_parser.py# UIDAI Aadhaar front & back parser
-│       ├── pan_parser.py    # PAN card parser
-│       ├── detector.py      # Document classifier
-│       ├── date_util.py     # Date normalization and age calculation
-│       └── common.py        # Validation patterns and regex utilities
-├── frontend/
-│   ├── index.html           # Minimalist interface layout
-│   ├── styles.css           # AMOLED & Light theme styles
-│   └── app.js               # Application logic and form population
-├── run.py                   # Local development launcher
-├── requirements.txt         # Python dependencies
-├── .gitignore
-├── LICENSE
-└── README.md
-```
+  - Typography powered by **Geist & Geist Mono** by Vercel.
+  - Harmonious **Dark Mode** (`#121212`) and **Light Mode** (`#ebe4da` linen canvas with `#ffffff` card surfaces and `#c4b39f` borders).
+  - Fully responsive, fluid layout optimized across ultrawide monitors, laptops, tablets, and mobile devices.
+- **Input Methods**: Drag-and-drop file upload, clipboard paste (Ctrl+V), and live camera stream capture.
+- **Data Export**: Export structured form data as JSON or copy directly to clipboard.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.10 or higher
+- Python 3.10+
 - Windows 10/11 (for native Windows Media OCR) or Tesseract OCR installed
 
 ### Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/InzamamulQureshi/QuickFill.git
-   cd QuickFill
-   ```
-
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+git clone https://github.com/InzamamulQureshi/QuickFill.git
+cd QuickFill
+pip install -r requirements.txt
+```
 
 ### Running the Application
 
-Launch the application using the runner script:
+Start the local server:
 ```bash
 python run.py
 ```
+The application will launch on `http://127.0.0.1:8000` and open automatically in your browser.
 
-The application will start the local server on `http://127.0.0.1:8000` and open it in your default web browser.
-
-Alternatively, launch with Uvicorn directly:
+Alternatively, run with Uvicorn:
 ```bash
 uvicorn backend.main:app --host 127.0.0.1 --port 8000
 ```
 
-## API Documentation
-
-When the server is running, interactive API documentation is available at:
-- Swagger UI: `http://127.0.0.1:8000/docs`
-- ReDoc: `http://127.0.0.1:8000/redoc`
-
-### Primary Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/api/status` | Returns operational status and available OCR engines |
-| `POST` | `/api/extract` | Extracts and parses identity card data from uploaded image |
-| `POST` | `/api/calculate-age` | Computes exact age from a given date string |
-| `GET` | `/api/samples/{card_type}` | Returns synthetic test cards for testing (`aadhaar_front`, `aadhaar_back`, `pan`) |
+| `GET` | `/api/status` | Operational status and active OCR engine |
+| `POST` | `/api/extract` | Parse identity card image or PDF |
+| `POST` | `/api/calculate-age` | Compute age from a date string |
+| `GET` | `/api/samples/{card_type}` | Fetch test cards (`aadhaar_front`, `aadhaar_back`, `pan`) |
+
+Interactive Swagger documentation is available at `http://127.0.0.1:8000/docs`.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License. See [LICENSE](LICENSE) for details.
