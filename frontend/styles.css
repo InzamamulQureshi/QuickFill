@@ -83,7 +83,7 @@ body.light-theme {
   --accent: #FF9644;
   --accent-hover: #e57e28;
   --accent-subtle: rgba(255, 150, 68, 0.12);
-  --accent-contrast: #ffffff;
+  --accent-contrast: #121212;
 
   --shadow-sm: 0 3px 12px rgba(45, 35, 25, 0.08), 0 1px 3px rgba(45, 35, 25, 0.05);
   --shadow-md: 0 12px 28px -4px rgba(45, 35, 25, 0.14), 0 4px 12px -2px rgba(45, 35, 25, 0.06);
@@ -236,13 +236,6 @@ label,
 }
 
 
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: var(--accent);
-  flex-shrink: 0;
-}
 
 .navbar-actions {
   display: flex;
@@ -835,11 +828,17 @@ textarea {
 
 @media (max-width: 640px) {
   .form-actions {
-    flex-direction: column;
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
-  .form-actions .btn {
+  .form-actions .btn-primary {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-content: center;
+  }
+  .form-actions .btn-secondary,
+  .form-actions .btn-ghost {
     width: 100%;
     justify-content: center;
   }
