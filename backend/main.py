@@ -277,9 +277,24 @@ if os.path.exists(frontend_dir):
             return FileResponse(logo_path, media_type="image/webp")
         return Response(status_code=404)
 
+    @app.get("/logo-light.webp")
+    async def serve_logo_light_webp():
+        logo_path = os.path.join(frontend_dir, "logo-light.webp")
+        if os.path.exists(logo_path):
+            return FileResponse(logo_path, media_type="image/webp")
+        return Response(status_code=404)
+
     @app.get("/og-image.png")
     async def serve_og_image():
         og_path = os.path.join(frontend_dir, "og-image.png")
         if os.path.exists(og_path):
             return FileResponse(og_path, media_type="image/png")
         return Response(status_code=404)
+
+    @app.get("/og-image.webp")
+    async def serve_og_image_webp():
+        og_path = os.path.join(frontend_dir, "og-image.webp")
+        if os.path.exists(og_path):
+            return FileResponse(og_path, media_type="image/webp")
+        return Response(status_code=404)
+

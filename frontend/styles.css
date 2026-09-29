@@ -225,6 +225,18 @@ label,
   border-radius: var(--radius-sm);
   object-fit: contain;
   flex-shrink: 0;
+}
+
+body.dark-theme .logo-dark {
+  display: block;
+}
+body.dark-theme .logo-light {
+  display: none !important;
+}
+body.light-theme .logo-dark {
+  display: none !important;
+}
+body.light-theme .logo-light {
   display: block;
 }
 
