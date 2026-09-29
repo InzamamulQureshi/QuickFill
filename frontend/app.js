@@ -12,16 +12,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function applyTheme(theme) {
     const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const favicon = document.querySelector('link[rel="icon"][type="image/webp"]');
     if (theme === "light") {
       document.body.classList.remove("dark-theme");
       document.body.classList.add("light-theme");
       localStorage.setItem("qf-theme", "light");
       if (metaTheme) metaTheme.setAttribute("content", "#ffffff");
+      if (favicon) favicon.setAttribute("href", "/static/logo-light.webp");
     } else {
       document.body.classList.remove("light-theme");
       document.body.classList.add("dark-theme");
       localStorage.setItem("qf-theme", "dark");
       if (metaTheme) metaTheme.setAttribute("content", "#121212");
+      if (favicon) favicon.setAttribute("href", "/static/logo.webp");
     }
   }
 
