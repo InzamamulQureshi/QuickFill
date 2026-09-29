@@ -1,67 +1,68 @@
 /* ==========================================================================
-   Quick Fill (QF) - Minimalist & Warm Design System
-   Warm, eye-pleasing tones with strictly 3 colour palettes per theme:
-   1. Surface Neutral (Warm Stone/Espresso)
-   2. Content Neutral (Warm Linen/Paper)
-   3. Warm Accent (Amber / Terracotta)
-   
-   Fully responsive & dynamically adjustable across Desktop, Tablets, & Mobile.
+   Quick Fill (QF) - Design System
+   Color Palettes:
+   - Dark Mode: https://colorhunt.co/palette/1b262c0f4c753282b8bbe1fa
+     #1B262C (Base), #0F4C75 (Navy Surface), #3282B8 (Cerulean Accent), #BBE1FA (Ice Blue Text)
+   - Light Mode: https://colorhunt.co/palette/e3f2fd90caf92196f30d47a1
+     #E3F2FD (Ice Background), #90CAF9 (Sky Border), #2196F3 (Electric Blue), #0D47A1 (Deep Navy Text)
+   - Typography: Geist & Geist Mono by Vercel
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   1. Theme Variables (3 Warm Colour Palettes)
+   1. Theme Variables
    -------------------------------------------------------------------------- */
 :root, body.dark-theme {
-  /* Palette 1: Surface Neutral (AMOLED Pure Black) */
-  --bg-base: #000000;
-  --bg-surface: #0e0e10;
-  --bg-subtle: #18181b;
-  --border: #242427;
-  --border-hover: #3a3a40;
+  /* Palette: #1b262c / #0f4c75 / #3282b8 / #bbe1fa */
+  --bg-base: #1b262c;
+  --bg-surface: #141f26;
+  --bg-subtle: #0f4c75;
+  --border: #223c4d;
+  --border-hover: #3282b8;
 
-  /* Palette 2: Content Neutral */
-  --text-primary: #f4f4f5;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
+  /* Typography */
+  --text-primary: #bbe1fa;
+  --text-secondary: #8ab6d6;
+  --text-muted: #577c98;
 
-  /* Palette 3: Unified Warm Terracotta Accent (Identical across Light & Dark) */
-  --accent: #c86249;
-  --accent-hover: #b2503a;
-  --accent-subtle: rgba(200, 98, 73, 0.14);
+  /* Accent */
+  --accent: #3282b8;
+  --accent-hover: #4ba3dc;
+  --accent-subtle: rgba(50, 130, 184, 0.16);
   --accent-contrast: #ffffff;
 
   /* Shared Tokens */
   --page-px: clamp(14px, 3vw, 28px);
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.5);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+  --shadow-sm: 0 1px 3px rgba(11, 16, 19, 0.4);
+  --shadow-md: 0 8px 24px rgba(11, 16, 19, 0.6);
   --transition-fast: 0.15s ease;
 }
 
 body.light-theme {
-  /* Palette 1: Surface Neutral */
-  --bg-base: #fbfbfa;
+  /* Palette: #e3f2fd / #90caf9 / #2196f3 / #0d47a1 */
+  --bg-base: #e3f2fd;
   --bg-surface: #ffffff;
-  --bg-subtle: #f2f2f0;
-  --border: #e5e5e3;
-  --border-hover: #d1d1cd;
+  --bg-subtle: #f0f7ff;
+  --border: #90caf9;
+  --border-hover: #2196f3;
 
-  /* Palette 2: Content Neutral */
-  --text-primary: #18181b;
-  --text-secondary: #52525b;
-  --text-muted: #71717a;
+  /* Typography */
+  --text-primary: #0d47a1;
+  --text-secondary: #1565c0;
+  --text-muted: #5c8cb8;
 
-  /* Palette 3: Unified Warm Terracotta Accent (Identical across Light & Dark) */
-  --accent: #c86249;
-  --accent-hover: #b2503a;
-  --accent-subtle: rgba(200, 98, 73, 0.10);
+  /* Accent */
+  --accent: #2196f3;
+  --accent-hover: #1976d2;
+  --accent-subtle: rgba(33, 150, 243, 0.12);
   --accent-contrast: #ffffff;
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 1px 4px rgba(13, 71, 161, 0.08);
+  --shadow-md: 0 8px 24px rgba(13, 71, 161, 0.12);
 }
 
 /* --------------------------------------------------------------------------
@@ -115,41 +116,40 @@ body {
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
 }
 
 .brand-logo {
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   border-radius: var(--radius-sm);
-  background-color: var(--accent);
-  color: var(--accent-contrast);
+  background: linear-gradient(135deg, #0f4c75 0%, #3282b8 100%);
+  color: #bbe1fa;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
   letter-spacing: -0.5px;
   flex-shrink: 0;
+  border: 1px solid rgba(187, 225, 250, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
-.brand-details {
-  display: flex;
-  flex-direction: column;
-  white-space: nowrap;
+body.light-theme .brand-logo {
+  background: linear-gradient(135deg, #2196f3 0%, #0d47a1 100%);
+  color: #ffffff;
+  border-color: rgba(13, 71, 161, 0.2);
+  box-shadow: 0 2px 8px rgba(13, 71, 161, 0.15);
 }
 
 .brand-title {
-  font-weight: 600;
-  font-size: 15px;
+  font-weight: 700;
+  font-size: 1.35rem;
   color: var(--text-primary);
   line-height: 1.2;
-}
-
-.brand-subtitle {
-  font-size: 11px;
-  color: var(--text-muted);
+  letter-spacing: -0.025em;
 }
 
 .engine-badge {
@@ -161,16 +161,24 @@ body {
   background-color: var(--bg-subtle);
   border: 1px solid var(--border);
   font-size: 11px;
+  font-weight: 500;
   color: var(--text-secondary);
   white-space: nowrap;
+}
+
+body.light-theme .engine-badge {
+  background-color: #e1f0fc;
+  color: var(--text-secondary);
+  border-color: var(--border);
 }
 
 .status-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: var(--accent);
+  background-color: #2ea043;
   flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(46, 160, 67, 0.6);
 }
 
 .navbar-actions {
@@ -335,18 +343,19 @@ body.light-theme .icon-moon { display: block; }
    6. Dropzone & File Upload
    -------------------------------------------------------------------------- */
 .dropzone {
-  border: 1.5px dashed var(--border-hover);
+  border: 1.5px dashed var(--border);
   border-radius: var(--radius-md);
-  padding: clamp(28px, 4vw, 40px) 16px;
+  padding: clamp(28px, 4vw, 38px) 16px;
   text-align: center;
-  background-color: var(--bg-base);
+  background-color: var(--bg-surface);
   cursor: pointer;
-  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .dropzone:hover, .dropzone.dragover {
   border-color: var(--accent);
   background-color: var(--accent-subtle);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .dropzone-inner {
@@ -357,27 +366,32 @@ body.light-theme .icon-moon { display: block; }
 }
 
 .upload-icon {
-  color: var(--text-muted);
+  color: var(--accent);
   margin-bottom: 4px;
+  transition: transform var(--transition-fast);
+}
+
+.dropzone:hover .upload-icon {
+  transform: translateY(-2px);
 }
 
 .dropzone-primary {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 14.5px;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
 .dropzone-secondary {
   font-size: 12px;
   color: var(--text-muted);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .dropzone-actions {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
   width: 100%;
 }
@@ -512,10 +526,10 @@ body.light-theme .icon-moon { display: block; }
 }
 
 /* --------------------------------------------------------------------------
-   9. Demo Samples Container (Scrollable on Small Screens)
+   9. Demo Samples Container (Balanced Grid Layout)
    -------------------------------------------------------------------------- */
 .demo-samples {
-  margin-top: 20px;
+  margin-top: 18px;
   padding-top: 16px;
   border-top: 1px solid var(--border);
 }
@@ -523,41 +537,43 @@ body.light-theme .icon-moon { display: block; }
 .demo-label {
   display: block;
   font-size: 12px;
+  font-weight: 500;
   color: var(--text-muted);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .demo-buttons {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.demo-buttons::-webkit-scrollbar {
-  display: none;
+  width: 100%;
 }
 
 .sample-pill {
-  background-color: var(--bg-subtle);
+  background-color: var(--bg-surface);
   border: 1px solid var(--border);
   color: var(--text-secondary);
   font-family: inherit;
   font-size: 12px;
-  padding: 7px 14px;
+  font-weight: 500;
+  padding: 8px 12px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   white-space: nowrap;
   transition: all var(--transition-fast);
-  flex-shrink: 0;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .sample-pill:hover {
   background-color: var(--accent-subtle);
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--text-primary);
+  transform: translateY(-1px);
 }
 
 /* --------------------------------------------------------------------------
@@ -764,60 +780,50 @@ textarea {
 }
 
 /* --------------------------------------------------------------------------
-   12. Toast Notification
+   12. Toast Notification (Sleek Floating Pill)
    -------------------------------------------------------------------------- */
 .toast {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
   background-color: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 12px 18px;
-  display: flex;
+  border: 1px solid var(--border-hover);
+  border-radius: 9999px;
+  padding: 10px 24px;
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-  box-shadow: var(--shadow-md);
+  justify-content: center;
+  box-shadow: var(--shadow-md), 0 4px 24px rgba(0, 0, 0, 0.35);
   opacity: 0;
-  transform: translateY(12px);
   pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.22s ease, transform 0.22s ease;
   z-index: 100;
-  max-width: 360px;
+  max-width: 90vw;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 @media (max-width: 580px) {
   .toast {
-    left: 16px;
-    right: 16px;
     bottom: 16px;
-    max-width: none;
+    padding: 8px 18px;
+    max-width: calc(100vw - 32px);
   }
 }
 
 .toast.show {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateX(-50%) translateY(0);
   pointer-events: auto;
 }
 
-.toast-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: var(--accent);
-  flex-shrink: 0;
-}
-
-.toast-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
 .toast-desc {
-  font-size: 12px;
-  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  letter-spacing: -0.01em;
 }
 
 /* --------------------------------------------------------------------------
@@ -850,6 +856,13 @@ textarea {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+}
+
+.modal-title-with-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .modal-header h3 {
@@ -1259,9 +1272,14 @@ textarea {
   }
 
   .toast {
-    left: 8px;
-    right: 8px;
-    bottom: 8px;
-    padding: 10px 14px;
+    left: 50%;
+    right: auto;
+    bottom: 12px;
+    transform: translateX(-50%) translateY(12px);
+    padding: 8px 14px;
+  }
+
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
   }
 }

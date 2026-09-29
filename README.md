@@ -4,13 +4,18 @@ A fast, offline identity document parser and KYC form auto-filler for Indian ID 
 
 ## Features
 
-- **Document Processing**: Automatic classification and parsing for Aadhaar Card (Front and Back) and PAN Card.
+- **Document Processing**: Automatic classification and parsing for Aadhaar Card (Front, Back, PVC Card, e-Aadhaar PDF) and PAN Card.
+- **Encrypted PDF Support**: Native modal workflow for unlocking password-protected UIDAI e-Aadhaar PDFs with UIDAI credential hints.
 - **Computer Vision Enhancement**: OpenCV pipeline handling soft-focus deblurring (unsharp masking), perspective rectification (4-point card contour detection), automated deskewing, and adaptive contrast equalization (CLAHE).
-- **Offline OCR Engine**: Hardware-accelerated local text extraction via Windows Media OCR (`winocr`) with automatic fallback to Tesseract OCR.
+- **Offline OCR Engine**: Hardware-accelerated local text extraction via RapidOCR / ONNX Runtime and Windows Media OCR (`winocr`) with automatic fallback to Tesseract OCR.
 - **Dynamic Age Calculation**: Extracts Date of Birth and computes exact chronological age (years, months) in real time.
-- **Multi-Document Merging**: Progressively aggregates fields across multiple scans (e.g. name and DOB from Aadhaar Front, address and guardian from Aadhaar Back) without overwriting existing data.
-- **Multiple Input Methods**: Supports direct file upload (drag-and-drop) and live webcam capture.
-- **Responsive Web Interface**: Minimalist UI supporting AMOLED dark mode and light mode, optimized for desktop, tablet, and mobile browsers.
+- **Smart Merge Confirmation**: Interactive comparison modal with side-by-side diff preview allowing users to selectively merge or replace applicant fields when scanning supplementary cards.
+- **Modern Design System**:
+  - **Typography**: Precision typography powered by **Geist & Geist Mono** by Vercel.
+  - **Dark Mode Palette**: `#1B262C` (Dark slate base), `#0F4C75` (Navy surface), `#3282B8` (Cerulean accent), `#BBE1FA` (Ice blue text).
+  - **Light Mode Palette**: `#E3F2FD` (Soft ice canvas), `#90CAF9` (Sky border), `#2196F3` (Electric blue accent), `#0D47A1` (Deep royal text).
+  - **Polished UI Components**: Elevated Quick Fill header branding, active OCR engine badge inside the Info dialog, balanced 2x2 quick test sample grid, and a sleek floating toast notification pill.
+- **Multiple Input Methods**: Supports direct file drag-and-drop, clipboard image paste (Ctrl+V / Paste button), and live camera stream capture.
 - **Data Export**: Export structured form data directly as JSON or copy to clipboard.
 
 ## Architecture

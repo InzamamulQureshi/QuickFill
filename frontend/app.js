@@ -893,12 +893,12 @@ document.addEventListener("DOMContentLoaded", () => {
      -------------------------------------------------------------------------- */
   submitFormBtn.addEventListener("click", () => {
     if (!inputName.value.trim()) {
-      showToast("Missing Name", "Please provide a name before submitting.");
+      showToast("Please provide a name before submitting.");
       inputName.focus();
       return;
     }
 
-    showToast("Submitted", "Application details successfully validated and saved.");
+    showToast("Application submitted successfully.");
   });
 
   exportJsonBtn.addEventListener("click", () => {
@@ -919,7 +919,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const jsonString = JSON.stringify(payload, null, 2);
 
     navigator.clipboard.writeText(jsonString).then(() => {
-      showToast("Exported", "KYC JSON copied to clipboard.");
+      showToast("KYC JSON copied to clipboard.");
     }).catch(() => {
       const blob = new Blob([jsonString], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -928,7 +928,7 @@ document.addEventListener("DOMContentLoaded", () => {
       a.download = `QF_KYC_${Date.now()}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      showToast("Downloaded", "KYC JSON saved to file.");
+      showToast("KYC JSON saved to file.");
     });
   });
 
@@ -949,7 +949,7 @@ document.addEventListener("DOMContentLoaded", () => {
       b.classList.remove("auto-filled");
     });
 
-    showToast("Reset", "All fields cleared.");
+    showToast("All fields cleared.");
   });
 
   toggleRawTextBtn.addEventListener("click", () => {
@@ -1051,14 +1051,27 @@ document.addEventListener("DOMContentLoaded", () => {
      10. Toast Notification
      -------------------------------------------------------------------------- */
   let toastTimer = null;
-  function showToast(title, message) {
+  function showToast(titleOrMessage, optionalDetail = "") {
     if (toastTimer) clearTimeout(toastTimer);
-    toastTitle.textContent = title;
-    toastMessage.textContent = message;
 
-    toastNotification.classList.add("show");
-    toastTimer = setTimeout(() => {
-      toastNotification.classList.remove("show");
-    }, 3200);
+    let displayMessage = titleOrMessage;
+    if (optionalDetail) {
+      displayMessage = optionalDetail;
+    }
+
+    if (toastMessage) {
+      toastMessage.textContent = displayMessage;
+    }
+    if (toastTitle) {
+      toastTitle.textContent = "";
+      toastTitle.style.display = "none";
+    }
+
+    if (toastNotification) {
+      toastNotification.classList.add("show");
+      toastTimer = setTimeout(() => {
+        toastNotification.classList.remove("show");
+      }, 3000);
+    }
   }
 });

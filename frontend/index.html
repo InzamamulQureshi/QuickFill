@@ -24,11 +24,11 @@
   <meta name="twitter:title" content="Quick Fill — Minimal ID Form Auto-Filler">
   <meta name="twitter:description" content="Instant KYC form auto-filler for Aadhaar & PAN cards with offline OCR and smart data merging.">
   <meta name="twitter:image" content="/static/og-image.png">
-  <meta name="theme-color" content="#c86249">
+  <meta name="theme-color" content="#1b262c">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body class="dark-theme">
@@ -37,14 +37,7 @@
     <div class="navbar-container">
       <div class="brand">
         <div class="brand-logo" title="Quick Fill">QF</div>
-        <div class="brand-details">
-          <span class="brand-title">Quick Fill</span>
-          <span class="brand-subtitle">ID Auto-Fill</span>
-        </div>
-        <div class="engine-badge" id="engineStatusIndicator" title="Active Engine">
-          <span class="status-dot"></span>
-          <span id="engineLabel">Local OCR</span>
-        </div>
+        <span class="brand-title">Quick Fill</span>
       </div>
 
       <div class="navbar-actions">
@@ -249,12 +242,9 @@
   </main>
 
   <!-- Notification Toast -->
-  <div class="toast" id="toastNotification">
-    <div class="toast-indicator"></div>
-    <div class="toast-content">
-      <p class="toast-title" id="toastTitle">Success</p>
-      <p class="toast-desc" id="toastMessage">Fields filled.</p>
-    </div>
+  <div class="toast" id="toastNotification" role="status" aria-live="polite">
+    <span class="toast-title" id="toastTitle" style="display: none;"></span>
+    <span class="toast-desc" id="toastMessage">Fields filled.</span>
   </div>
 
   <!-- Password Protected PDF Modal -->
@@ -353,7 +343,13 @@
   <div class="modal-overlay" id="infoModal" style="display: none;">
     <div class="modal-window">
       <div class="modal-header">
-        <h3>About Quick Fill (QF)</h3>
+        <div class="modal-title-with-badge">
+          <h3>About Quick Fill</h3>
+          <div class="engine-badge" id="engineStatusIndicator" title="Active Engine">
+            <span class="status-dot"></span>
+            <span id="engineLabel">Local OCR</span>
+          </div>
+        </div>
         <button type="button" class="btn-icon" id="closeModalBtn" aria-label="Close dialog">&times;</button>
       </div>
       <div class="modal-content">
