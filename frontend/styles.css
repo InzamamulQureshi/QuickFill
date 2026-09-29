@@ -1,8 +1,8 @@
 /* ==========================================================================
    Quick Fill (QF) - Design System
-   Strict 3-Color Warm Palette:
-   - Dark Mode: #121212 (Dark Base), #FFCE99 (Peach Text), #FF9644 (Warm Orange)
-   - Light Mode: #FFFDF1 (Warm Cream Base), #FFCE99 (Peach Border), #FF9644 (Warm Orange)
+   Warm Aesthetic:
+   - Dark Mode: #121212 Base, Clean Neutral Words (#F4F4F5), Warm Orange Accent (#FF9644)
+   - Light Mode: #F5EBE1 Grounded Warm Canvas, #FFFDF1 Ivory Surfaces, #FF9644 Accent
    - Typography: Geist & Geist Mono by Vercel
    ========================================================================== */
 
@@ -10,19 +10,19 @@
    1. Theme Variables
    -------------------------------------------------------------------------- */
 :root, body.dark-theme {
-  /* Strict 3 Colors: #121212 (Dark Base), #FFCE99 (Peach Text), #FF9644 (Warm Orange) */
+  /* Dark Theme: Neutral Uncolored Words with Warm Accent */
   --bg-base: #121212;
   --bg-surface: #18181b;
-  --bg-subtle: #222226;
-  --border: rgba(255, 206, 153, 0.16);
+  --bg-subtle: #242429;
+  --border: #2e2e34;
   --border-hover: #FF9644;
 
-  /* Typography (Color 2: #FFCE99) */
-  --text-primary: #FFCE99;
-  --text-secondary: rgba(255, 206, 153, 0.72);
-  --text-muted: rgba(255, 206, 153, 0.45);
+  /* Typography: Clean, Uncolored Neutral Text */
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
 
-  /* Accent / Interactive (Color 3: #FF9644) */
+  /* Accent / Interactive (#FF9644) */
   --accent: #FF9644;
   --accent-hover: #ffa866;
   --accent-subtle: rgba(255, 150, 68, 0.12);
@@ -41,17 +41,17 @@
 }
 
 body.light-theme {
-  /* Strict 3 Colors: #FFFDF1 (Cream Base), #FFCE99 (Peach Border), #FF9644 (Warm Orange) */
-  --bg-base: #FFFDF1;
-  --bg-surface: #ffffff;
-  --bg-subtle: rgba(255, 206, 153, 0.2);
-  --border: #FFCE99;
+  /* Light Theme: Grounded Warm Linen Canvas (Comfortable, Not Blinding White) */
+  --bg-base: #f5ebe1;
+  --bg-surface: #FFFDF1;
+  --bg-subtle: #ece0d2;
+  --border: #dfb282;
   --border-hover: #FF9644;
 
-  /* Typography */
-  --text-primary: #1c1815;
-  --text-secondary: #574030;
-  --text-muted: #886c58;
+  /* Typography: Crisp Neutral Dark Text */
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #71717a;
 
   /* Accent / Interactive */
   --accent: #FF9644;
@@ -163,7 +163,7 @@ body.light-theme .brand-logo {
 }
 
 body.light-theme .engine-badge {
-  background-color: #e1f0fc;
+  background-color: var(--bg-subtle);
   color: var(--text-secondary);
   border-color: var(--border);
 }

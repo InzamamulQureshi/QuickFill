@@ -12,9 +12,9 @@ A fast, offline identity document parser and KYC form auto-filler for Indian ID 
 - **Smart Merge Confirmation**: Interactive comparison modal with side-by-side diff preview allowing users to selectively merge or replace applicant fields when scanning supplementary cards.
 - **Modern Design System**:
   - **Typography**: Precision typography powered by **Geist & Geist Mono** by Vercel.
-  - **Strict 3-Color Warm Palette**:
-    - **Dark Mode**: `#121212` (Dark base, replacing white), `#FFCE99` (Warm peach text & subtle borders), `#FF9644` (Warm orange interactive highlights).
-    - **Light Mode**: `#FFFDF1` (Warm ivory cream canvas), `#FFCE99` (Peach borders), `#FF9644` (Warm orange interactive).
+  - **Balanced Warm Palette**:
+    - **Dark Mode**: `#121212` dark base canvas, clean uncolored neutral typography (`#F4F4F5` / `#A1A1AA`), and `#FF9644` warm orange interactive highlights.
+    - **Light Mode**: `#F5EBE1` grounded warm linen canvas (comfortable, non-glare), `#FFFDF1` ivory card surfaces, `#DFB282` borders, and `#FF9644` warm orange interactive highlights.
   - **Minimalist Branding**: Clean typography-first header, monochrome border logo with accents removed, active OCR engine badge inside the Info dialog, and balanced 2x2 quick test sample grid.
 - **Multiple Input Methods**: Supports direct file drag-and-drop, clipboard image paste (Ctrl+V / Paste button), and live camera stream capture.
 - **Data Export**: Export structured form data directly as JSON or copy to clipboard.
