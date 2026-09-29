@@ -11,7 +11,9 @@
    -------------------------------------------------------------------------- */
 :root {
   /* Layout & Shared Tokens (Strictly Theme-Independent) */
-  --page-px: clamp(16px, 3vw, 36px);
+  --container-max-w: min(1680px, 95vw);
+  --page-px: clamp(16px, 2.5vw, 36px);
+  --panel-padding: clamp(20px, 2.2vw, 32px);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -22,6 +24,25 @@
                       border-color 0.18s cubic-bezier(0.4, 0, 0.2, 1),
                       color 0.18s cubic-bezier(0.4, 0, 0.2, 1),
                       box-shadow 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* UX Component Dynamic Scaling Tokens */
+  --input-py: clamp(10px, 1.3vh, 13px);
+  --input-px: clamp(12px, 1vw, 16px);
+  --input-font: clamp(13.5px, 0.95vw, 15px);
+  --btn-py: clamp(9px, 1.3vh, 13px);
+  --btn-px: clamp(16px, 1.6vw, 24px);
+  --btn-font: clamp(12.5px, 0.9vw, 14px);
+  --btn-min-h: clamp(40px, 4.5vh, 46px);
+  --label-font: 13px;
+  --origin-font: 11px;
+  --heading-font: clamp(16px, 1.15vw, 19px);
+  --upload-icon-size: clamp(34px, 2.8vw, 44px);
+  --drop-primary-font: clamp(14px, 1vw, 16.5px);
+  --drop-secondary-font: clamp(11.5px, 0.8vw, 13px);
+  --sample-padding: 8px 12px;
+  --sample-font: 12px;
+  --seg-min-h: clamp(38px, 4.4vh, 44px);
+  --seg-font: clamp(12.5px, 0.85vw, 14px);
 
   /* Dark Theme (Default) */
   --bg-base: #121212;
@@ -181,7 +202,7 @@ label,
 }
 
 .navbar-container {
-  max-width: min(1560px, 94vw);
+  max-width: var(--container-max-w);
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
@@ -267,23 +288,237 @@ body.light-theme .icon-moon { display: block; }
    4. Page Layout (Fluid Grid across Desktop, Tablet, & Mobile)
    -------------------------------------------------------------------------- */
 .page-container {
-  max-width: min(1560px, 94vw);
-  margin: clamp(20px, 3.5vh, 44px) auto;
+  max-width: var(--container-max-w);
+  margin: clamp(14px, 2vh, 32px) auto;
   padding: 0 var(--page-px);
   display: grid;
-  grid-template-columns: minmax(380px, 1fr) minmax(480px, 1.35fr);
-  gap: clamp(18px, 2.2vw, 32px);
+  grid-template-columns: minmax(400px, 1.08fr) minmax(500px, 1.38fr);
+  gap: clamp(18px, 2.2vw, 36px);
   align-items: start;
   width: 100%;
   flex: 1;
 }
 
-@media (min-width: 1600px) {
+/* Desktop Viewport Fill & Studio Layout (min-width: 1001px) */
+@media (min-width: 1001px) {
   .page-container {
-    max-width: 1680px;
-    grid-template-columns: 520px 1fr;
-    gap: 36px;
-    margin: 40px auto;
+    align-items: stretch;
+  }
+
+  .studio-panel,
+  .form-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .studio-section {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  #uploadView {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dropzone {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: clamp(260px, 32vh, 480px);
+  }
+
+  .demo-samples {
+    margin-top: auto;
+  }
+
+  .clean-form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(14px, 1.8vh, 22px);
+  }
+
+  #groupAddress {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #fullAddress {
+    flex: 1;
+    min-height: clamp(88px, 12vh, 160px);
+  }
+
+  .form-actions {
+    margin-top: auto;
+  }
+
+  /* When document preview is active, compact the dropzone so the preview shines */
+  .studio-panel:has(#previewContainer:not([style*="display: none"])) #uploadView {
+    flex: 0 0 auto;
+  }
+
+  .studio-panel:has(#previewContainer:not([style*="display: none"])) .dropzone {
+    flex: 0 0 auto;
+    min-height: 110px;
+    padding: clamp(12px, 1.6vh, 20px) clamp(16px, 1.5vw, 24px);
+  }
+
+  .studio-panel:has(#previewContainer:not([style*="display: none"])) .dropzone .upload-icon {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 0;
+  }
+
+  .studio-panel:has(#previewContainer:not([style*="display: none"])) .dropzone-primary {
+    font-size: 14px;
+  }
+
+  .studio-panel:has(#previewContainer:not([style*="display: none"])) .dropzone-secondary {
+    display: none;
+  }
+
+  .studio-panel:has(#previewContainer:not([style*="display: none"])) #previewContainer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-top: 14px;
+  }
+
+  .studio-panel:has(#previewContainer:not([style*="display: none"])) .preview-media {
+    flex: 1;
+    min-height: clamp(180px, 22vh, 340px);
+    max-height: clamp(240px, 32vh, 460px);
+  }
+}
+
+@media (min-width: 1001px) and (min-height: 680px) {
+  .page-container {
+    min-height: calc(100vh - 65px - clamp(28px, 4vh, 64px));
+  }
+}
+
+/* Widescreen Scaling (min-width: 1440px) */
+@media (min-width: 1440px) {
+  :root {
+    --container-max-w: min(1860px, 95vw);
+    --page-px: clamp(24px, 2.4vw, 44px);
+    --panel-padding: clamp(28px, 2.2vw, 40px);
+    --heading-font: 20px;
+    --label-font: 14px;
+    --origin-font: 12px;
+    --input-py: 13px;
+    --input-px: 18px;
+    --input-font: 15px;
+    --btn-py: 12px;
+    --btn-px: 22px;
+    --btn-font: 14px;
+    --btn-min-h: 46px;
+    --upload-icon-size: 46px;
+    --drop-primary-font: 17.5px;
+    --drop-secondary-font: 13.5px;
+    --sample-padding: 10px 14px;
+    --sample-font: 13px;
+    --seg-min-h: 44px;
+    --seg-font: 14px;
+  }
+
+  .page-container {
+    grid-template-columns: minmax(460px, 1.12fr) minmax(560px, 1.4fr);
+    gap: clamp(26px, 2.4vw, 42px);
+  }
+
+  .preview-media {
+    max-height: 380px;
+  }
+}
+
+/* Ultrawide & 2K/4K Scaling (min-width: 1800px) */
+@media (min-width: 1800px) {
+  :root {
+    --container-max-w: min(2200px, 95vw);
+    --page-px: clamp(32px, 2.8vw, 56px);
+    --panel-padding: 38px;
+    --heading-font: 22px;
+    --label-font: 15px;
+    --origin-font: 12.5px;
+    --input-py: 15px;
+    --input-px: 20px;
+    --input-font: 16px;
+    --btn-py: 14px;
+    --btn-px: 26px;
+    --btn-font: 15px;
+    --btn-min-h: 50px;
+    --upload-icon-size: 54px;
+    --drop-primary-font: 19.5px;
+    --drop-secondary-font: 14.5px;
+    --sample-padding: 12px 18px;
+    --sample-font: 14px;
+    --seg-min-h: 48px;
+    --seg-font: 15px;
+  }
+
+  .page-container {
+    grid-template-columns: minmax(540px, 1.15fr) minmax(680px, 1.45fr);
+    gap: 48px;
+  }
+
+  .panel {
+    border-radius: 20px;
+  }
+
+  .preview-media {
+    max-height: 480px;
+  }
+
+  .brand-title {
+    font-size: 22px;
+  }
+
+  .brand-logo {
+    width: 42px;
+    height: 42px;
+  }
+
+  .btn-icon {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+/* 4K Super-Widescreen Scaling (min-width: 2400px) */
+@media (min-width: 2400px) {
+  :root {
+    --container-max-w: min(2560px, 94vw);
+    --page-px: clamp(40px, 3vw, 64px);
+    --panel-padding: 48px;
+    --heading-font: 24px;
+    --label-font: 16px;
+    --origin-font: 13px;
+    --input-py: 17px;
+    --input-px: 24px;
+    --input-font: 17px;
+    --btn-py: 16px;
+    --btn-px: 30px;
+    --btn-font: 16px;
+    --btn-min-h: 54px;
+    --upload-icon-size: 64px;
+    --drop-primary-font: 22px;
+    --drop-secondary-font: 16px;
+    --sample-padding: 14px 22px;
+    --sample-font: 15px;
+    --seg-min-h: 52px;
+    --seg-font: 16px;
+  }
+
+  .page-container {
+    grid-template-columns: minmax(640px, 1.15fr) minmax(800px, 1.45fr);
+    gap: 56px;
   }
 }
 
@@ -319,7 +554,7 @@ body.light-theme .icon-moon { display: block; }
   background-color: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: clamp(20px, 2.2vw, 32px);
+  padding: var(--panel-padding, clamp(20px, 2.2vw, 32px));
   box-shadow: var(--shadow-sm);
   min-width: 0;
   width: 100%;
@@ -334,7 +569,7 @@ body.light-theme .icon-moon { display: block; }
 }
 
 .panel-heading {
-  font-size: clamp(16px, 1.15vw, 19px);
+  font-size: var(--heading-font, clamp(16px, 1.15vw, 19px));
   font-weight: 600;
   color: var(--text-primary);
   letter-spacing: -0.2px;
@@ -380,10 +615,10 @@ body.light-theme .icon-moon { display: block; }
   border: none;
   color: var(--text-muted);
   font-family: inherit;
-  font-size: clamp(12.5px, 0.85vw, 14px);
+  font-size: var(--seg-font, clamp(12.5px, 0.85vw, 14px));
   font-weight: 500;
   padding: clamp(8px, 1.1vh, 11px) 12px;
-  min-height: clamp(38px, 4.4vh, 44px);
+  min-height: var(--seg-min-h, clamp(38px, 4.4vh, 44px));
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: var(--transition-theme);
@@ -424,12 +659,13 @@ body.light-theme .icon-moon { display: block; }
   flex-direction: column;
   align-items: center;
   gap: clamp(8px, 1.2vh, 12px);
+  width: 100%;
 }
 
 .upload-icon {
   color: var(--accent);
-  width: clamp(32px, 2.8vw, 42px);
-  height: clamp(32px, 2.8vw, 42px);
+  width: var(--upload-icon-size, clamp(32px, 2.8vw, 42px));
+  height: var(--upload-icon-size, clamp(32px, 2.8vw, 42px));
   margin-bottom: 2px;
   transition: transform var(--transition-fast);
 }
@@ -439,13 +675,13 @@ body.light-theme .icon-moon { display: block; }
 }
 
 .dropzone-primary {
-  font-size: clamp(14px, 1vw, 16.5px);
+  font-size: var(--drop-primary-font, clamp(14px, 1vw, 16.5px));
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .dropzone-secondary {
-  font-size: clamp(11.5px, 0.8vw, 13px);
+  font-size: var(--drop-secondary-font, clamp(11.5px, 0.8vw, 13px));
   color: var(--text-muted);
   margin-bottom: 6px;
 }
@@ -617,9 +853,9 @@ body.light-theme .icon-moon { display: block; }
   border: 1px solid var(--border);
   color: var(--text-secondary);
   font-family: inherit;
-  font-size: 12px;
+  font-size: var(--sample-font, 12px);
   font-weight: 500;
-  padding: 8px 12px;
+  padding: var(--sample-padding, 8px 12px);
   border-radius: var(--radius-sm);
   cursor: pointer;
   white-space: nowrap;
@@ -664,14 +900,14 @@ body.light-theme .icon-moon { display: block; }
 }
 
 label {
-  font-size: 13px;
+  font-size: var(--label-font, 13px);
   font-weight: 500;
   color: var(--text-primary);
   line-height: 1.3;
 }
 
 .field-origin {
-  font-size: 11px;
+  font-size: var(--origin-font, 11px);
   color: var(--text-muted);
   white-space: nowrap;
 }
@@ -700,12 +936,12 @@ input[type="text"], textarea {
   max-width: 100%;
   box-sizing: border-box;
   font-family: inherit;
-  font-size: clamp(13.5px, 0.95vw, 15px);
+  font-size: var(--input-font, clamp(13.5px, 0.95vw, 15px));
   color: var(--text-primary);
   background-color: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: clamp(10px, 1.3vh, 13px) clamp(12px, 1vw, 16px);
+  padding: var(--input-py, clamp(10px, 1.3vh, 13px)) var(--input-px, clamp(12px, 1vw, 16px));
   outline: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -756,10 +992,10 @@ textarea {
    -------------------------------------------------------------------------- */
 .btn {
   font-family: inherit;
-  font-size: clamp(12.5px, 0.9vw, 14px);
+  font-size: var(--btn-font, clamp(12.5px, 0.9vw, 14px));
   font-weight: 500;
-  padding: clamp(9px, 1.3vh, 13px) clamp(16px, 1.6vw, 24px);
-  min-height: clamp(40px, 4.5vh, 46px);
+  padding: var(--btn-py, clamp(9px, 1.3vh, 13px)) var(--btn-px, clamp(16px, 1.6vw, 24px));
+  min-height: var(--btn-min-h, clamp(40px, 4.5vh, 46px));
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   cursor: pointer;

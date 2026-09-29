@@ -166,7 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
   tabUploadBtn.addEventListener("click", () => {
     tabUploadBtn.classList.add("active");
     tabCameraBtn.classList.remove("active");
-    uploadView.style.display = "block";
+    uploadView.style.display = "";
     cameraView.style.display = "none";
     stopCamera();
   });
@@ -175,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
     tabCameraBtn.classList.add("active");
     tabUploadBtn.classList.remove("active");
     uploadView.style.display = "none";
-    cameraView.style.display = "block";
+    cameraView.style.display = "";
     startCamera();
   });
 
@@ -284,7 +284,7 @@ document.addEventListener("DOMContentLoaded", () => {
     displayPreview(base64Data);
 
     stopCamera();
-    uploadView.style.display = "block";
+    uploadView.style.display = "";
     cameraView.style.display = "none";
     tabUploadBtn.classList.add("active");
     tabCameraBtn.classList.remove("active");
